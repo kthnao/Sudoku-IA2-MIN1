@@ -4,6 +4,7 @@
 ## Get latest from https://github.com/github/gitignore/blob/main/VisualStudio.gitignore
 
 # User-specific files
+
 *.rsuser
 *.suo
 *.user
@@ -13,6 +14,8 @@
 # User-specific files (MonoDevelop/Xamarin Studio)
 *.userprefs
 
+# Adding VS workspace files
+*.code-workspace
 # Mono auto generated files
 mono_crash.*
 
@@ -373,6 +376,7 @@ MigrationBackup/
 # Ionide (cross platform F# VS Code tools) working folder
 .ionide/
 
+
 # Fody - auto-generated XML schema
 FodyWeavers.xsd
 
@@ -386,6 +390,7 @@ FodyWeavers.xsd
 
 # Local History for Visual Studio Code
 .history/
+.localhistory/
 
 # Windows Installer files from build outputs
 *.cab
@@ -396,3 +401,4 @@ FodyWeavers.xsd
 
 # JetBrains Rider
 *.sln.iml
+.idea/
