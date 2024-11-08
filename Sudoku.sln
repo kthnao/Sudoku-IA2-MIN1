@@ -18,6 +18,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Sudoku.Backtracking", "Sudo
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Sudoku.GraphProba", "Sudoku.GraphProba\Sudoku.GraphProba.csproj", "{DDD1F0C1-2C7D-435B-810A-EAA9BF7DB958}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Sudoku.SolverCSPAIMA", "SolverCSPAIMA\Sudoku.SolverCSPAIMA.csproj", "{F082ABBF-7CA9-43F4-9D2D-2924ABB7A963}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -40,6 +42,10 @@ Global
 		{DDD1F0C1-2C7D-435B-810A-EAA9BF7DB958}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{DDD1F0C1-2C7D-435B-810A-EAA9BF7DB958}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{DDD1F0C1-2C7D-435B-810A-EAA9BF7DB958}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F082ABBF-7CA9-43F4-9D2D-2924ABB7A963}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F082ABBF-7CA9-43F4-9D2D-2924ABB7A963}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F082ABBF-7CA9-43F4-9D2D-2924ABB7A963}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F082ABBF-7CA9-43F4-9D2D-2924ABB7A963}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
