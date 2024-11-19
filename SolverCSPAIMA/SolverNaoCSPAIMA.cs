@@ -1,8 +1,18 @@
-using System;
+using Sudoku.Shared;
 
-namespace Sudoku.SolverCSPAIMA;
+namespace Sudoku.SolverCSPAIMA{
 
-public class SolverNaoCSPAIMA
+public class SolverNaoCSPAIMA: ISudokuSolver
 {
+    public SudokuGrid Solve(SudokuGrid s)
+        {
+            return s.CloneSudoku();
+        }
 
 }
+}
+
+
+
+    
+
