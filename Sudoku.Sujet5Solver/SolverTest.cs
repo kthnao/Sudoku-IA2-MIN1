@@ -2,7 +2,6 @@
 
 using Python.Runtime;
 using Sudoku.Shared;
-
 public class SolverTest: ISudokuSolver
 {
  public SudokuGrid Solve(SudokuGrid s)
@@ -39,14 +38,48 @@ public class TestPythonSolver : PythonSolverBase
 				string code = System.IO.File.ReadAllText("SudokuSolver.py");
 				scope.Exec(code);
 
-				var result = scope.Get("result").As<int[,]>();
+				// Récupérer l'objet Python
+				var result = scope.Get("result");
+
+				var Result = result.As<int[][]>();
+				
+				//Console.WriteLine($"Type of result from Python: {Result.GetType()}");
+				
+				// Print the contents of the 2D array
+				// foreach (var row in Result)
+				// {
+				// 	Console.WriteLine(string.Join(", ", row)); // Join the elements of the row as a string
+				// }
+				
+				var managedResult = ConvertJaggedToMultidimensional(Result);
 
 				// Convertissez le résultat NumPy en tableau .NET
-				// var managedResult = AsManagedArray(scope, result);
+				//var managedResult = AsManagedArray(scope, pyCells);
 
-				return new SudokuGrid() { Cells = result };
+				return new SudokuGrid() { Cells = managedResult };
 			}
-			//}
+
+			// Fonction pour convertir int[][] en int[,]
+			static int[,] ConvertJaggedToMultidimensional(int[][] jaggedArray)
+			{
+				int rows = jaggedArray.Length;
+				int columns = jaggedArray[0].Length;
+
+				// Création du tableau multidimensionnel
+				int[,] result = new int[rows, columns];
+
+				// Remplissage du tableau multidimensionnel
+				for (int i = 0; i < rows; i++)
+				{
+					for (int j = 0; j < columns; j++)
+					{
+						result[i, j] = jaggedArray[i][j];
+					}
+				}
+
+				return result;
+			}
+			
 
 		}
 
