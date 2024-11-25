@@ -22,7 +22,18 @@ namespace Sudoku.SolverCSPAIMA
 
                 // Charger et exécuter le script Python
                 string code = Resources.CSPAIMA_py;  // Le chemin ou contenu du script Python
+                Console.WriteLine("Exécution du code Python...");
                 scope.Exec(code);
+
+                // Vérifier si "solved_grid" existe avant de l'extraire
+                if (scope.Contains("solved_grid"))
+                {
+                    Console.WriteLine("solved_grid trouvé dans le scope.");
+                }
+                else
+                {
+                    Console.WriteLine("solved_grid non trouvé dans le scope.");
+                }
 
                 // Récupérer le résultat du script Python
                 PyObject result = scope.Get("solved_grid");

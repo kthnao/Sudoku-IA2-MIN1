@@ -7,6 +7,10 @@ def sudoku_constraint(A, a, B, b):
 
 # Résolution du Sudoku en utilisant CSP
 def solve_sudoku_csp(grid):
+    # Afficher la grille d'entrée pour vérifier qu'elle est bien reçue
+    print("Grille initiale:")
+    print(np.array(grid))  # Afficher la grille sous forme de tableau NumPy
+
     variables = [(i, j) for i in range(9) for j in range(9)]
     domains = {(i, j): [grid[i][j]] if grid[i][j] != 0 else list(range(1, 10)) for i in range(9) for j in range(9)}
 
@@ -25,11 +29,27 @@ def solve_sudoku_csp(grid):
                     if (r, c) != (i, j):
                         neighbors[(i, j)].add((r, c))
 
+    # Créer un CSP avec les variables, domaines et voisins
     csp = CSP(variables, domains, neighbors, sudoku_constraint)
+    
+    # Effectuer la recherche avec backtracking et AC3 pour l'inférence
     solution = backtracking_search(csp, inference=AC3)
+    
+    # Afficher la solution partielle pour déboguer
+    print("Solution partielle:")
+    print(solution)
 
+    # Si la solution est correcte, créer la grille résolue
     solved_grid = np.zeros((9, 9), dtype=int)
     for (i, j), value in solution.items():
         solved_grid[i, j] = value
-    
+
+    # Afficher la grille résolue pour s'assurer que 'solved_grid' est bien défini
+    print("Grille résolue:")
+    print(solved_grid)
+
+    # Assurez-vous que 'solved_grid' est accessible pour C#
+    globals()['solved_grid'] = solved_grid
+
+    # Retourner la grille sous forme de liste
     return solved_grid.tolist()
