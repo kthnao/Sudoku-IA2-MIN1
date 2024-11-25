@@ -1,48 +1,45 @@
-using Sudoku.Shared;
 using Python.Runtime;
+using Sudoku.Shared;
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Sudoku.SolverCSPAIMA
 {
     public class SolverNaoCSPAIMA : PythonSolverBase
-
     {
-      public override Shared.SudokuGrid Solve(Shared.SudokuGrid s)
+        public override Shared.SudokuGrid Solve(Shared.SudokuGrid s)
         {
             using (PyModule scope = Py.CreateScope())
             {
-                // Convertir la grille Sudoku de .NET en tableau NumPy pour Python
+                // Injecter le script de conversion, ici un script qui pourrait être commun à tous les solveurs
                 AddNumpyConverterScript(scope);
+
+                // Convertir le tableau .NET en tableau NumPy
                 var pyCells = AsNumpyArray(s.Cells, scope);
 
-                // Passer la grille au script Python
+                // Créer une variable Python "instance" pour la grille de Sudoku
                 scope.Set("instance", pyCells);
 
-                // Code Python utilisant AIMA pour résoudre le Sudoku via CSP
-                string code = Resources.CSPAIMA_py;
+                // Charger et exécuter le script Python
+                string code = Resources.CSPAIMA_py;  // Le chemin ou contenu du script Python
                 scope.Exec(code);
 
-                // Récupérer le résultat du Sudoku résolu
-                PyObject result = scope.Get("result");
+                // Récupérer le résultat du script Python
+                PyObject result = scope.Get("solved_grid");
 
-                // Convertir la grille NumPy en tableau .NET
+                // Convertir le résultat NumPy en tableau .NET
                 var managedResult = AsManagedArray(scope, result);
+
+                // Retourner la grille de Sudoku avec les valeurs remplies
                 return new SudokuGrid() { Cells = managedResult };
             }
         }
 
         protected override void InitializePythonComponents()
         {
-            // Installer les modules Python nécessaires (comme numpy et aima3)
+            // Déclarer les modules Python nécessaires
             InstallPipModule("numpy");
-            InstallPipModule("aima3");
             base.InitializePythonComponents();
         }
-
-	}
+    }
 }
-    
