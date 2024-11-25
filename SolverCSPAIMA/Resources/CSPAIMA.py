@@ -1,57 +1,53 @@
 import numpy as np
-from timeit import default_timer
+from aima3.logic import *
+from aima3.csp import *
 
-def is_valid(grid, row, col, num):
-    # Vérifier si num est présent dans la ligne spécifiée
-    if num in grid[row]:
-        return False
+# Définir les variables, le domaine et les contraintes pour le Sudoku
+def sudoku_variables():
+    return [(r, c) for r in range(9) for c in range(9)]
+
+def sudoku_domains():
+    return {var: list(range(1, 10)) if instance[var[0], var[1]] == 0 else [instance[var[0], var[1]]] for var in sudoku_variables()}
+
+def sudoku_constraints():
+    # Les contraintes de ligne, de colonne et de bloc 3x3
+    constraints = []
+    for r in range(9):
+        for c in range(9):
+            var = (r, c)
+            row = [(r, j) for j in range(9)]
+            col = [(i, c) for i in range(9)]
+            block = [(i, j) for i in range(3 * (r // 3), 3 * (r // 3) + 3)
+                          for j in range(3 * (c // 3), 3 * (c // 3) + 3)]
+            # Ajouter les contraintes de ligne, colonne et bloc
+            constraints.append(AllDiff(row))
+            constraints.append(AllDiff(col))
+            constraints.append(AllDiff(block))
+    return constraints
+
+# Convertir l'instance du Sudoku en un problème CSP
+def create_sudoku_csp(instance):
+    # Définir les variables, les domaines et les contraintes
+    variables = sudoku_variables()
+    domains = sudoku_domains()
+    constraints = sudoku_constraints()
+
+    # Créer un problème CSP
+    csp = CSP(variables, domains)
+    for constraint in constraints:
+        csp.add_constraint(constraint)
     
-    # Vérifier si num est présent dans la colonne spécifiée
-    if num in grid[:, col]:
-        return False
-    
-    # Vérifier si num est présent dans le bloc 3x3
-    start_row, start_col = 3 * (row // 3), 3 * (col // 3)
-    for r in range(start_row, start_row + 3):
-        for c in range(start_col, start_col + 3):
-            if grid[r, c] == num:
-                return False
-    return True
+    return csp
 
-def solve_sudoku(grid, row=0, col=0):
-    # Trouver la prochaine cellule vide
-    for i in range(row, 9):
-        for j in range(col if i == row else 0, 9):
-            if grid[i, j] == 0:
-                for num in range(1, 10):
-                    if is_valid(grid, i, j, num):
-                        grid[i, j] = num
-                        if solve_sudoku(grid, i, j + 1):
-                            return True
-                        grid[i, j] = 0
-                return False
-    return True
+# Résoudre le Sudoku en utilisant CSP et Backtracking Search
+def solve_sudoku_with_csp(instance):
+    csp = create_sudoku_csp(instance)
+    solution = backtrack(csp)
+    return solution
 
-# Définir `instance` uniquement si non déjà défini par PythonNET
-if 'instance' not in locals():
-    instance = np.array([
-        [0,0,0,0,9,4,0,3,0],
-        [0,0,0,5,1,0,0,0,7],
-        [0,8,9,0,0,0,0,4,0],
-        [0,0,0,0,0,0,2,0,8],
-        [0,6,0,2,0,1,0,5,0],
-        [1,0,2,0,0,0,0,0,0],
-        [0,7,0,0,0,0,5,2,0],
-        [9,0,0,0,6,5,0,0,0],
-        [0,4,0,9,7,0,0,0,0]
-    ], dtype=int)
-
-start = default_timer()
-# Exécuter la résolution de Sudoku
-if solve_sudoku(instance):
-    # print("Sudoku résolu par backtracking avec succès.")
-    result = instance  # `result` sera utilisé pour récupérer la grille résolue depuis C#
+# Exemple d'instance de Sudoku (0 représente les cases vides)
+if 'instance' in locals():
+    result = solve_sudoku_with_csp(instance)
 else:
-    print("Aucune solution trouvée.")
-execution = default_timer() - start
-print("Le temps de résolution est de : ", execution * 1000, " ms")
+    result = None
+
