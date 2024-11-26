@@ -145,7 +145,7 @@ namespace Sudoku.Benchmark
         static BenchmarkSolversBase()
         {
 			
-            _Solvers = new[] { new EmptySolver() }.Concat(Shared.SudokuGrid.GetSolvers().Select(s =>
+            _Solvers = new[] { new NorvigSolver() }.Concat(Shared.SudokuGrid.GetSolvers().Select(s =>
             {
 	            try
 	            {
@@ -154,10 +154,10 @@ namespace Sudoku.Benchmark
 	            catch (Exception e)
 	            {
 		            Console.WriteLine(e);
-		            return new EmptySolver();
+		            return new NorvigSolver();
 	            }
 	            
-            }).Where(s => s.GetType() != typeof(EmptySolver))).Select(s => new SolverPresenter() { Solver = s }).ToList();
+            }).Where(s => s.GetType() != typeof(NorvigSolver))).Select(s => new SolverPresenter() { Solver = s }).ToList();
 			//_Solvers = SudokuGrid.GetSolvers().Where(s => ! s.Value.Value.GetType().Name.ToLowerInvariant().StartsWith("pso")).Select(s => new SolverPresenter() { Solver = s.Value.Value }).ToList();
 			
         }
