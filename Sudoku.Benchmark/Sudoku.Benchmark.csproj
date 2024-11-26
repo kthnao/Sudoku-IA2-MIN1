@@ -22,6 +22,7 @@
     <ProjectReference Include="..\Sudoku.NeuralNetworkCSharp\Sudoku.NeuralNetworkCSharp.csproj" />
     <ProjectReference Include="..\SolverCSPAIMA\Sudoku.SolverCSPAIMA.csproj" />
     <ProjectReference Include="..\ProjectTestSolver\ProjectTestSolver.csproj" />
+    <ProjectReference Include="..\Sudoku.simulé\Sudoku.simulé.csproj" />
   </ItemGroup>
   <ItemGroup>
     <None Update="appsettings.json">
