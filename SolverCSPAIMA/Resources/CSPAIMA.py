@@ -1,12 +1,14 @@
 import numpy as np
 from aima3.logic import *
+from aima3.csp import *
 
+solved_grid = np.empty((9, 9), dtype=int)
 # Fonction de validation des contraintes
 def sudoku_constraint(A, a, B, b):
     return a != b  # Les valeurs des voisins doivent être différentes
 
 # Résolution du Sudoku en utilisant CSP
-def solve_sudoku_csp(grid):
+def solve_sudoku_csp(grid):    
     # Afficher la grille d'entrée pour vérifier qu'elle est bien reçue
     print("Grille initiale:")
     print(np.array(grid))  # Afficher la grille sous forme de tableau NumPy
@@ -33,7 +35,7 @@ def solve_sudoku_csp(grid):
     csp = CSP(variables, domains, neighbors, sudoku_constraint)
     
     # Effectuer la recherche avec backtracking et AC3 pour l'inférence
-    solution = backtracking_search(csp, inference=AC3)
+    solution = backtracking_search(csp, inference=mac)
     
     # Afficher la solution partielle pour déboguer
     print("Solution partielle:")
@@ -47,9 +49,7 @@ def solve_sudoku_csp(grid):
     # Afficher la grille résolue pour s'assurer que 'solved_grid' est bien défini
     print("Grille résolue:")
     print(solved_grid)
+   
+    return solved_grid
 
-    # Assurez-vous que 'solved_grid' est accessible pour C#
-    globals()['solved_grid'] = solved_grid
-
-    # Retourner la grille sous forme de liste
-    return solved_grid.tolist()
+solved_grid = solve_sudoku_csp(instance)
