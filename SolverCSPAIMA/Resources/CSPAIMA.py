@@ -35,7 +35,7 @@ def solve_sudoku_csp(grid):
     csp = CSP(variables, domains, neighbors, sudoku_constraint)
     
     # Effectuer la recherche avec backtracking et AC3 pour l'inférence
-    solution = backtracking_search(csp, inference=mac)
+    solution = backtracking_search(csp, select_unassigned_variable=mrv, order_domain_values=lcv, inference=mac)
     
     # Afficher la solution partielle pour déboguer
     print("Solution partielle:")
