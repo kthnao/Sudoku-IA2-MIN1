@@ -83,6 +83,26 @@ namespace Sudoku.SolverCSPAIMA {
                 return ResourceManager.GetString("CSPAIMA.py", resourceCulture);
             }
         }
+        internal static string conversionCSP_py {
+            get {
+                return ResourceManager.GetString("conversionCSP.py", resourceCulture);
+            }
+        }
+        internal static string dynaCSP_py {
+            get {
+                return ResourceManager.GetString("dynaCSP.py", resourceCulture);
+            }
+        }
+        internal static string infoStratCSP_py {
+            get {
+                return ResourceManager.GetString("infoStratCSP.py", resourceCulture);
+            }
+        }
+        internal static string stepCount_py {
+            get {
+                return ResourceManager.GetString("stepCount.py", resourceCulture);
+            }
+        }
         
 
     }
