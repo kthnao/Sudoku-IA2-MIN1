@@ -82,7 +82,7 @@ public class HumanSolvers : ISudokuSolver
 					if (s.Cells[row, col] == 0) // Only consider empty cells
 					{
 						var candidates = GetCandidates(s, row, col);
-						if (candidates.Count == 1)
+						if (candidates.Count() == 1)
 						{
 							// Naked single found
 							s.Cells[row, col] = candidates.First();
@@ -533,7 +533,7 @@ private bool ApplyYWing(SudokuGrid s)
                 continue; // Skip already filled cells
 
             var candidates1 = GetCandidates(s, row1, col1);
-            if (candidates1.Count != 2) 
+            if (candidates1.Count() != 2) 
                 continue; // Y-Wing needs two candidates in the first cell
 
             foreach (var candidate in candidates1)
@@ -583,7 +583,9 @@ private bool ApplyYWing(SudokuGrid s)
 
         foreach (var (row, col) in emptyCells)
         {
-            candidateMap[(row, col)] = GetCandidates(s, row, col);
+            candidateMap[(row, col)] = GetCandidates(s, row, col).ToList();
+                
+            
         }
 
         // Look for XYZ-Wing patterns in the region
@@ -645,7 +647,7 @@ private List<(int row, int col)> FindYWingCells(SudokuGrid s, int row1, int col1
                 continue; // Skip filled cells and the first cell itself
 
             var candidates2 = GetCandidates(s, row2, col2);
-            if (candidates2.Contains(candidate) && candidates2.Count == 2)
+            if (candidates2.Contains(candidate) && candidates2.Count() == 2)
             {
                 yWingCells.Add((row2, col2));
             }
@@ -716,23 +718,22 @@ private bool EliminateYWingCandidate(SudokuGrid s, int candidate, int row1, int 
 
 		
 
-		/// <summary>
-		/// Gets the list of candidates for a specific cell.
-		/// </summary>
-		private List<int> GetCandidates(SudokuGrid s, int row, int col)
-		{
-			var candidates = new List<int>();
+private readonly int[] candidatesArray = new int[9];
 
-			for (int val = 1; val <= 9; val++)
-			{
-				if (IsValid(s, row, col, val))
-				{
-					candidates.Add(val);
-				}
-			}
+private int[] GetCandidates(SudokuGrid s, int row, int col)
+{
+    int index = 0;
 
-			return candidates;
-		}
+    for (int val = 1; val <= 9; val++)
+    {
+        if (IsValid(s, row, col, val))
+        {
+            candidatesArray[index++] = val;
+        }
+    }
+
+    return candidatesArray.Take(index).ToArray();
+}
         
         
 
