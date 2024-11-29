@@ -1,23 +1,29 @@
-import re
-from collections import defaultdict, deque
+import numpy as np
 from aima.core.search.csp import CSP, Domain, Variable, Constraint, Assignment
+import re
+from collections import deque
 
-class conversionCSP:
+
+class SudokuCSP:
 
     _BaseSudokuCSP = None
     _BaseSudokuCSPLock = object()
     _NameRegex = re.compile(r"cell(?P<row>\d)(?P<col>\d)")
 
     @staticmethod
-    def GetSudokuCSP(s):
-        # Initialisation du CSP avec les contraintes de base
-        to_return = conversionCSP.GetSudokuBaseCSP()
+    def GetSudokuCSP(sudoku_grid):
+        """
+        Initialise un CSP pour le Sudoku en fonction de la grille fournie.
+        :param sudoku_grid: La grille de Sudoku à résoudre (tableau 9x9)
+        :return: CSP avec les contraintes et variables
+        """
+        to_return = SudokuCSP.GetSudokuBaseCSP()
 
-        # Ajout des contraintes spécifiques au masque fourni
+        # Ajout des valeurs fixes dans la grille
         mask = {}
         for i in range(9):
             for j in range(9):
-                cell_val = s.Cells[i][j]
+                cell_val = sudoku_grid[i][j]
                 if cell_val != 0:
                     mask[i * 9 + j] = cell_val
 
@@ -28,7 +34,7 @@ class conversionCSP:
         # Mise à jour des domaines des variables avec les valeurs du masque
         while mask_queue:
             current_mask_idx = mask_queue.popleft()
-            current_var_name = conversionCSP.GetVarName(current_mask_idx // 9, current_mask_idx % 9)
+            current_var_name = SudokuCSP.GetVarName(current_mask_idx // 9, current_mask_idx % 9)
 
             for obj_var in cell_vars:
                 if obj_var.getName() == current_var_name:
@@ -41,17 +47,26 @@ class conversionCSP:
         return to_return
 
     @staticmethod
-    def SetValuesFromAssignment(a, s):
-        for obj_var in a.getVariables():
-            row_idx, col_idx = conversionCSP.GetIndices(obj_var)
-            value = a.getAssignment(obj_var)
-            s.Cells[row_idx][col_idx] = value
+    def SetValuesFromAssignment(assignment, sudoku_grid):
+        """
+        Met à jour la grille de Sudoku avec les valeurs obtenues dans l'assignation.
+        :param assignment: L'assignation des variables
+        :param sudoku_grid: La grille de Sudoku à mettre à jour
+        """
+        for obj_var in assignment.getVariables():
+            row_idx, col_idx = SudokuCSP.GetIndices(obj_var)
+            value = assignment.getAssignment(obj_var)
+            sudoku_grid[row_idx][col_idx] = value
 
     @staticmethod
     def GetSudokuBaseCSP():
-        if conversionCSP._BaseSudokuCSP is None:
-            with conversionCSP._BaseSudokuCSPLock:
-                if conversionCSP._BaseSudokuCSP is None:
+        """
+        Crée la base du CSP pour le Sudoku, incluant les variables et les contraintes.
+        :return: CSP avec les variables et les contraintes de base
+        """
+        if SudokuCSP._BaseSudokuCSP is None:
+            with SudokuCSP._BaseSudokuCSPLock:
+                if SudokuCSP._BaseSudokuCSP is None:
                     to_return = DynamicCSP()
 
                     # Domaine des variables
@@ -63,25 +78,25 @@ class conversionCSP:
                     for row_index in range(9):
                         row_vars = {}
                         for col_index in range(9):
-                            var_name = conversionCSP.GetVarName(row_index, col_index)
+                            var_name = SudokuCSP.GetVarName(row_index, col_index)
                             cell_variable = Variable(var_name)
                             to_return.AddNewVariable(cell_variable)
                             to_return.setDomain(cell_variable, cell_domain)
                             row_vars[col_index] = cell_variable
                         variables[row_index] = row_vars
 
-                    # Contraintes
+                    # Contraintes (lignes, colonnes, boîtes)
                     constraints = []
 
                     # Lignes
                     for row_vars in variables.values():
-                        ligne_constraints = conversionCSP.GetAllDiffConstraints(list(row_vars.values()))
+                        ligne_constraints = SudokuCSP.GetAllDiffConstraints(list(row_vars.values()))
                         constraints.extend(ligne_constraints)
 
                     # Colonnes
                     for j in range(9):
                         col_vars = [variables[i][j] for i in range(9)]
-                        col_constraints = conversionCSP.GetAllDiffConstraints(col_vars)
+                        col_constraints = SudokuCSP.GetAllDiffConstraints(col_vars)
                         constraints.extend(col_constraints)
 
                     # Boîtes
@@ -92,30 +107,46 @@ class conversionCSP:
                         for i in range(3):
                             for j in range(3):
                                 boite_vars.append(variables[i_start + i][j_start + j])
-                        boite_constraints = conversionCSP.GetAllDiffConstraints(boite_vars)
+                        boite_constraints = SudokuCSP.GetAllDiffConstraints(boite_vars)
                         constraints.extend(boite_constraints)
 
                     # Ajouter les contraintes
                     for constraint in constraints:
                         to_return.addConstraint(constraint)
 
-                    conversionCSP._BaseSudokuCSP = to_return
+                    SudokuCSP._BaseSudokuCSP = to_return
 
-        return conversionCSP._BaseSudokuCSP.clone()
+        return SudokuCSP._BaseSudokuCSP.clone()
 
     @staticmethod
-    def GetIndices(ob_variable):
-        match = conversionCSP._NameRegex.match(ob_variable.getName())
+    def GetIndices(variable):
+        """
+        Récupère les indices (ligne, colonne) à partir du nom de la variable.
+        :param variable: La variable du CSP
+        :return: Indices (ligne, colonne)
+        """
+        match = SudokuCSP._NameRegex.match(variable.getName())
         row_idx = int(match.group("row"))
         col_idx = int(match.group("col"))
         return row_idx, col_idx
 
     @staticmethod
     def GetVarName(row_index, col_index):
+        """
+        Génère le nom d'une variable pour la case (row_index, col_index).
+        :param row_index: Indice de la ligne
+        :param col_index: Indice de la colonne
+        :return: Nom de la variable (cellXXYY)
+        """
         return f"cell{row_index}{col_index}"
 
     @staticmethod
     def GetAllDiffConstraints(vars):
+        """
+        Génère des contraintes d'inégalité entre toutes les variables d'une liste.
+        :param vars: Liste des variables
+        :return: Liste des contraintes d'inégalité
+        """
         constraints = []
         for i in range(len(vars)):
             for j in range(i + 1, len(vars)):
@@ -149,3 +180,19 @@ class NotEqualConstraint(Constraint):
 
     def isSatisfiedWith(self, assignment):
         return assignment.getAssignment(self.getScope()[0]) != assignment.getAssignment(self.getScope()[1])
+
+
+# Fonction de résolution du Sudoku en CSP
+def solve_sudoku_csp(sudoku_grid):
+    csp = SudokuCSP.GetSudokuCSP(sudoku_grid)
+
+    # Exécution de la recherche avec backtracking (et d'autres heuristiques comme MRV)
+    solution = backtracking_search(csp, select_unassigned_variable=mrv, order_domain_values=lcv, inference=mac)
+
+    # Vérification et retour de la solution
+    solved_grid = np.zeros((9, 9), dtype=int)
+    if solution:
+        SudokuCSP.SetValuesFromAssignment(solution, solved_grid)
+    
+    return solved_grid
+
