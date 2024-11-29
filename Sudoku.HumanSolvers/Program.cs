@@ -1,12 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using Sudoku.Shared;
-
-namespace TestSolver
+﻿using Sudoku.Shared;
+namespace Sudoku.HumanSolvers
 {
-	public class TestSolver : ISudokuSolver
-	{
+public class HumanSolvers : ISudokuSolver
+{
 		/// <summary>
 		/// Solves the given Sudoku grid using human techniques.
 		/// </summary>

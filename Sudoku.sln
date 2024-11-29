@@ -18,6 +18,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Sudoku.Backtracking", "Sudo
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TestSolver", "TestSolver\TestSolver.csproj", "{53370764-34F8-4074-BB03-BED822A9C88C}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Sudoku.HumanSolvers", "Sudoku.HumanSolvers\Sudoku.HumanSolvers.csproj", "{FC0E0BB0-A954-4F7B-A04F-72B8C0853F5E}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -40,6 +42,10 @@ Global
 		{53370764-34F8-4074-BB03-BED822A9C88C}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{53370764-34F8-4074-BB03-BED822A9C88C}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{53370764-34F8-4074-BB03-BED822A9C88C}.Release|Any CPU.Build.0 = Release|Any CPU
+		{FC0E0BB0-A954-4F7B-A04F-72B8C0853F5E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{FC0E0BB0-A954-4F7B-A04F-72B8C0853F5E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{FC0E0BB0-A954-4F7B-A04F-72B8C0853F5E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{FC0E0BB0-A954-4F7B-A04F-72B8C0853F5E}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
