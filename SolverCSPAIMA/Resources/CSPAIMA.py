@@ -35,20 +35,14 @@ def solve_sudoku_csp(grid):
     csp = CSP(variables, domains, neighbors, sudoku_constraint)
     
     # Effectuer la recherche avec backtracking et AC3 pour l'inférence
-    solution = backtracking_search(csp, select_unassigned_variable=mrv, order_domain_values=lcv, inference=mac)
+    solution = backtracking_search(csp, select_unassigned_variable=mrv, order_domain_values=unordered_domain_values, inference=forward_checking)
     
-    # Afficher la solution partielle pour déboguer
-    print("Solution partielle:")
-    print(solution)
-
     # Si la solution est correcte, créer la grille résolue
     solved_grid = np.zeros((9, 9), dtype=int)
     for (i, j), value in solution.items():
         solved_grid[i, j] = value
 
     # Afficher la grille résolue pour s'assurer que 'solved_grid' est bien défini
-    print("Grille résolue:")
-    print(solved_grid)
    
     return solved_grid
 
