@@ -92,12 +92,15 @@ public class GraphProba : ISudokuSolver
             //Loic: cette boucle applique une contrainte de non égalité pour les cellules voisines de ligne, colonne et groupe
             foreach (var cellIndex in CellIndices)
             {
-                Console.WriteLine(SudokuGrid.AllNeighbours.Length.ToString());
-                foreach (var neighbourCellIndex in SudokuGrid.AllNeighbours[cellIndex])
+                if (cellIndex >= 0 && cellIndex < SudokuGrid.AllNeighbours.Length)
                 {
-                    if ((neighbourCellIndex.row * 9 + neighbourCellIndex.column) > cellIndex)
+                    foreach (var neighbourCellIndex in SudokuGrid.AllNeighbours[cellIndex])
                     {
-                        Variable.ConstrainFalse(Cells[cellIndex] == Cells[(neighbourCellIndex.row * 9 + neighbourCellIndex.column)]);
+                        int neighbourIndex = neighbourCellIndex.row * 9 + neighbourCellIndex.column;
+                        if (neighbourIndex > cellIndex)
+                        {
+                            Variable.ConstrainFalse(Cells[cellIndex] == Cells[neighbourIndex]);
+                        }
                     }
                 }
             }
