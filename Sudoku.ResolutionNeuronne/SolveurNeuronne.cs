@@ -1,45 +1,55 @@
 ﻿using Python.Runtime;
 using Sudoku.Shared;
 
-namespace Sudoku.ResolutionNeuronne;
-
-public class SolveurNeuronne : ISudokuSolver 
+namespace Sudoku.ResolutionNeuronne
 {
-    public SudokuGrid Solve(SudokuGrid s)
+    public class SolveurNeuronne : ISudokuSolver
     {
-        return s;
+        public SudokuGrid Solve(SudokuGrid s)
+        {
+            return s;
+        }
     }
 
-}
+    public class SolveurNeuronnePython : PythonSolverBase
+    {
+        public override Shared.SudokuGrid Solve(Shared.SudokuGrid s)
+        {
+            InitializePythonComponents();
+
+            using (Py.GIL())
+            {
+                using (PyModule scope = Py.CreateScope())
+                {
+					
+                    // Ajouter le script de conversion NumPy
+                    AddNumpyConverterScript(scope);
+					
+                    // Convertir la grille de Sudoku en objet Python
+                    // Convertissez le tableau .NET en tableau NumPy
+					var pyCells = AsNumpyArray(s.Cells, scope);
+
+					// create a Python variable "instance"
+					scope.Set("instance", pyCells);
 
 
-public class SolveurNeuronnePython : PythonSolverBase
-{
+                    // Lire et exécuter le script Python
+                    string code = System.IO.File.ReadAllText("SolveurNeuronnePython.py");
+                    scope.Exec(code);
 
-	public override Shared.SudokuGrid Solve(Shared.SudokuGrid s)
-	{
-		//System.Diagnostics.Debugger.Break();
+                    PyObject result = scope.Get("result");
 
-		//For some reason, the Benchmark runner won't manage to get the mutex whereas individual execution doesn't cause issues
-		//using (Py.GIL())
-		//{
-		// create a Python scope
-		using (PyModule scope = Py.CreateScope())
-		{
-			// convert the Person object to a PyObject
-			PyObject pySudoku = s.Cells.ToPython();
+					Console.WriteLine(result);
 
-			// create a Python variable "person"
-			scope.Set("sudoku", pySudoku);
 
-			// the person object may now be used in Python
-            String code = System.IO.File.ReadAllText("SolveurNeuronnePython.py");
-			scope.Exec(code);
-            var result = scope.Get("result").As<int[,]>();
-			return new SudokuGrid() { Cells = result };
-		}
-		//}
 
-	}
 
+					// Convertissez le résultat NumPy en tableau .NET
+					var managedResult = AsManagedArray(scope, result);
+
+					return new SudokuGrid() { Cells = managedResult };
+                }
+            }
+        }
+    }
 }
