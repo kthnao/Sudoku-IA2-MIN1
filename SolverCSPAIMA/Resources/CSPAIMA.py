@@ -16,8 +16,8 @@ def degree(assignment, csp):
 def mrv_degree(assignment, csp):
     """Retourne la variable avec le moins de valeurs restantes, puis le plus grand nombre de voisins non assignés"""
     unassigned_vars = [var for var in csp.variables if var not in assignment]
-    mrv_var = min(unassigned_vars, key=lambda var: len(csp.domains[var]))
-    return max(csp.neighbors[mrv_var], key=lambda var: len([n for n in csp.neighbors[var] if n not in assignment]))
+    mrv_vars = [var for var in unassigned_vars if len(csp.domains[var]) == min(len(csp.domains[v]) for v in unassigned_vars)]
+    return max(mrv_vars, key=lambda var: len([n for n in csp.neighbors[var] if n not in assignment]))
 
 # Dictionnaire pour maper les stratégies en fonctions
 heuristics_dict = {
@@ -28,11 +28,11 @@ heuristics_dict = {
 
 value_orders_dict = {
     "lcv": lcv,  # Least Constraining Value
-    "random": lambda variable, domain, assignment: random.choice(domain)  # Corrigé pour accepter les bons arguments
+    "random": lambda var, assignment, csp: sorted(csp.choices(var), key=lambda _: random.random())
 }
 
 inference_methods_dict = {
-    "ac3": lambda csp, assignment: AC3(csp),  # Corrigé pour que AC3 soit utilisé correctement dans le contexte
+    "ac3": lambda csp, var, value, assignment, removals: AC3(csp),  # Corrigé pour que AC3 soit utilisé correctement dans le contexte
     "mac": mac  # Maintain Arc-Consistency
 }
 
@@ -74,12 +74,40 @@ def solve_sudoku_csp(grid, variable_heuristic, value_order, inference_method):
         inference=inference_methods_dict[inference_method]  # Mapper à la fonction
     )
 
-    # Créer la grille résolue
     solved_grid = np.zeros((9, 9), dtype=int)
-    for (i, j), value in solution.items():
-        solved_grid[i, j] = value
+
+    if solution is None:
+        print("Failed to solve the Sudoku puzzle")
+    
+    else:
+        # Créer la grille résolue        
+        for (i, j), value in solution.items():
+            solved_grid[i, j] = value
 
     return solved_grid
 
+# Block de code à fins de débogage
+if __name__ == "__main__":
+    # Tableau NumPy représentant une grille de Sudoku
+    instance = np.array([
+    [4, 0, 0, 0, 0, 0, 8, 0, 5],
+    [0, 3, 0, 0, 0, 0, 0, 0, 0],
+    [0, 0, 0, 7, 0, 0, 0, 0, 0],
+    [0, 2, 0, 0, 0, 0, 0, 6, 0],
+    [0, 0, 0, 0, 8, 0, 4, 0, 0],
+    [0, 0, 0, 0, 1, 0, 0, 0, 0],
+    [0, 0, 0, 6, 0, 3, 0, 7, 0],
+    [5, 0, 0, 2, 0, 0, 0, 0, 0],
+    [1, 0, 4, 0, 0, 0, 0, 0, 0]
+    ])
+    variable_heuristic = "mrv"
+    value_order = "lcv"
+    inference_method = "mac"
+
+
 # Appel de la fonction avec les arguments passés depuis C#
 solved_grid = solve_sudoku_csp(instance, variable_heuristic, value_order, inference_method)
+
+# Afficher la grille résolue
+print("\nGrille résolue:")
+print(solved_grid)
