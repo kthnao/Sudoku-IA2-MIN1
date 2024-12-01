@@ -147,6 +147,13 @@ namespace Sudoku.Shared
             //    DownloadUrl = @"https://www.python.org/ftp/python/3.9.9/python-3.9.9-embed-amd64.zip",
             //};
 
+            // Runtime.PythonDLL = "python37.dll";
+            // // set the download source
+            // Python.Deployment.Installer.Source = new Installer.DownloadInstallationSource()
+            // {
+            //     DownloadUrl = @"https://www.python.org/ftp/python/3.7.3/python-3.7.3-embed-amd64.zip",
+            // };
+
 
             // // install in local directory. if you don't set it will install in local app data of your user account
             //Python.Deployment.Installer.InstallPath = Path.GetFullPath(".");
@@ -219,14 +226,31 @@ namespace Sudoku.Shared
         /// Convertit un tableau NumPy en tableau .NET
         /// </summary>
 		public static int[,] AsManagedArray(PyModule scope, PyObject pyCells)
-		{
-			PyObject asNetArray = scope.Get("asNetArray");
-			PyObject netResult = asNetArray.Invoke(pyCells);
+        {
+            PyObject asNetArray = scope.Get("asNetArray");
+            PyObject netResult = asNetArray.Invoke(pyCells);
 
-			// Convertissez le PyObject résultant en tableau .NET
-			var managedResult = netResult.AsManagedObject(typeof(int[,])) as int[,];
-			return managedResult;
-		}
+            // Convertissez le PyObject résultant en tableau .NET
+            var longArray = netResult.AsManagedObject(typeof(long[,])) as long[,];
+            if (longArray == null)
+            {
+                throw new InvalidCastException("Cannot convert the result to long[,].");
+            }
+
+            int rows = longArray.GetLength(0);
+            int cols = longArray.GetLength(1);
+            int[,] managedResult = new int[rows, cols];
+
+            for (int i = 0; i < rows; i++)
+            {
+                for (int j = 0; j < cols; j++)
+                {
+                    managedResult[i, j] = (int)longArray[i, j];
+                }
+            }
+
+            return managedResult;
+        }
 
 
 	}
