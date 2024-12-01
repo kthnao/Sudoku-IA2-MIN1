@@ -1,10 +1,14 @@
-﻿using Sudoku.Shared;
+﻿using System.Reflection;
+using Sudoku.Shared;
 using Microsoft.ML.Probabilistic.Algorithms;
 using Microsoft.ML.Probabilistic.Distributions;
 using Microsoft.ML.Probabilistic.Math;
 using Microsoft.ML.Probabilistic.Models;
 using Microsoft.ML.Probabilistic.Models.Attributes;
 using Range = Microsoft.ML.Probabilistic.Models.Range;
+using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.CSharp;
+using Microsoft.ML.Probabilistic;
 
 
 namespace Sudoku.GraphProba;
@@ -12,10 +16,24 @@ namespace Sudoku.GraphProba;
 public class GraphProba : ISudokuSolver
 {
 	private static RobustSudokuModel robustModel = new RobustSudokuModel();
+	
 	public SudokuGrid Solve(SudokuGrid s)
 	{
 		//var model = new NaiveSudokuModel();
-		return robustModel.SolveSudoku(s);
+		IGeneratedAlgorithm? compiledModel = null;
+		try
+		{
+			Assembly assembly = Assembly.LoadFrom(@"..\..\..\..\Sudoku.GraphProba\compiledModel\Model_EP.dll");
+			Type modelType = assembly.GetTypes().FirstOrDefault(t => typeof(IGeneratedAlgorithm).IsAssignableFrom(t));
+			compiledModel = (IGeneratedAlgorithm)Activator.CreateInstance(modelType);
+		}
+		catch (IOException e)
+		{
+			return robustModel.SolveSudoku(s, compiledModel);
+		}
+		
+		Console.WriteLine(@"Using Precompiled Model...");
+		return robustModel.SolveSudoku(s, compiledModel);
 	}
 }
 
@@ -57,6 +75,7 @@ public class RobustSudokuModel
 	public VariableArray<Dirichlet> CellsPrior;
 	public VariableArray<Vector> ProbCells;
 	public VariableArray<int> Cells;
+	public int nbrOfIterations = 50;
 
 
 	private const double EpsilonProba = 0.00000001;
@@ -127,13 +146,16 @@ public class RobustSudokuModel
 		//IAlgorithm algo = new VariationalMessagePassing();
 		//IAlgorithm algo = new MaxProductBeliefPropagation();
 		//les algos ont ete teste cependant la difference lors du lancement du projet n'est pas facilement visible
-		algo.DefaultNumberOfIterations = 50;
+		algo.DefaultNumberOfIterations = nbrOfIterations;
 		//algo.DefaultNumberOfIterations = 200;
 
 
 
 
 		InferenceEngine = new InferenceEngine(algo);
+		InferenceEngine.Compiler.WriteSourceFiles = true;
+		InferenceEngine.Compiler.GeneratedSourceFolder = @"..\..\..\..\Sudoku.GraphProba\compiledModel";
+		InferenceEngine.Compiler.GenerateInMemory = false; // Forces saving to disk
 
 
 		//InferenceEngine.OptimiseForVariables = new IVariable[] { Cells };
@@ -144,7 +166,7 @@ public class RobustSudokuModel
 
 
 
-	public virtual SudokuGrid SolveSudoku(SudokuGrid s)
+	public virtual SudokuGrid SolveSudoku(SudokuGrid s, IGeneratedAlgorithm? compiledMod)
 	{
 		Dirichlet[] dirArray = Enumerable.Repeat(Dirichlet.Uniform(CellDomain.Count), CellIndices.Count).ToArray();
 
@@ -174,10 +196,33 @@ public class RobustSudokuModel
 			}
 		}
 
+		if (compiledMod != null)
+		{
+			compiledMod.SetObservedValue("CellsPrior", dirArray);
+			compiledMod.Execute(nbrOfIterations);
+			Dirichlet[] cellsProbsPosterior = compiledMod.Marginal<Dirichlet[]>("ProbCells");
 
-		CellsPrior.ObservedValue = dirArray;
 
-		DoInference(dirArray, s);
+			foreach (var cellIndex in CellIndices)
+			{
+				var row = cellIndex / 9;
+				int col = cellIndex % 9;
+				if (s.Cells[row, col] == 0)
+				{
+					//s.Cellules[cellIndex] = cellValues[cellIndex];
+
+					var mode = cellsProbsPosterior[cellIndex].GetMode();
+					var value = mode.IndexOf(mode.Max()) + 1;
+					s.Cells[row, col] = value;
+				}
+			}
+		}
+		else
+		{
+			CellsPrior.ObservedValue = dirArray;
+
+			DoInference(dirArray, s);
+		}
 		return s;
 	}
 
