@@ -10,9 +10,4 @@
       <ProjectReference Include="..\Sudoku.Shared\Sudoku.Shared.csproj" />
     </ItemGroup>
 
-    <ItemGroup>
-      <PackageReference Include="Microsoft.ML.Probabilistic" Version="0.4.2403.801" />
-      <PackageReference Include="Microsoft.ML.Probabilistic.Compiler" Version="0.4.2403.801" />
-    </ItemGroup>
-
 </Project>
