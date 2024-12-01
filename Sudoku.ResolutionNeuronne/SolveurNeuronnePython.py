@@ -5,56 +5,55 @@ from timeit import default_timer
 import copy
 
 
-# Fonction de normalisation (mise à l'échelle des valeurs entre -0.5 et 0.5)
-def norm(grid):
-    return (grid / 9.0) - 0.5
+def preprocess_sudoku(grid):
+    """
+    Prépare une grille de Sudoku donnée sous forme de liste 2D pour le modèle.
+    """
+    # Mettre en forme le Sudoku
+    quiz_array = np.array(grid).reshape(9, 9, 1)
+    quiz_array = quiz_array / 9 - 0.5  # Normalisation
+    return quiz_array
 
-# Fonction de dénormalisation (inverse de la normalisation)
-def denorm(grid):
-    return (grid + 0.5) * 9.0
+def predict_sudoku(model, quiz_array):
+    """
+    Prédit la solution d'un Sudoku avec le modèle.
+    """
+    # Ajouter une dimension batch pour le modèle
+    quiz_array = np.expand_dims(quiz_array, axis=0)
+    
+    # Prédiction
+    predictions = model.predict(quiz_array)
+    
+    # Décoder les prédictions
+    predicted_sudoku = np.argmax(predictions, axis=-1).reshape(9, 9) + 1
+    
+    return predicted_sudoku
 
-# Fonction pour résoudre le Sudoku avec le modèle CNN
-def inference_sudoku(sample):
-    feat = copy.copy(sample)
-
-    while(1):
-        # Prediction des valeurs
-        out = model.predict(feat.reshape((1, 9, 9, 1)))
-        out = out.squeeze()
-
-        # Récupérer les valeurs prédites
-        pred = np.argmax(out, axis=1).reshape((9, 9)) + 1
-
-        # Récupérer les probabilités pour chaque valeur
-        prob = np.around(np.max(out, axis=1).reshape((9, 9)), 2)
-
-        # Créer un masque pour les cases vides
-        feat = denorm(feat).reshape((9, 9))
-        mask = (feat == 0)
-
-        # Si aucune case vide n'est trouvée, sortir de la boucle
-        if(mask.sum() == 0):
-            break
-
-        # Récupérer les probabilités pour les cases vides
-        prob_new = prob * mask
-
-        # Trouver l'indice de la plus haute probabilité
-        ind = np.argmax(prob_new)
-
-        # Trouver la ligne et la colonne correspondantes
-        x, y = (ind // 9), (ind % 9)
-
-        # Récupérer la valeur prédite pour cette case
-        val = pred[x][y]
-
-        # Assigner cette valeur à la case
-        feat[x][y] = val
-
-        # Repasser la grille avec la valeur ajoutée au modèle pour obtenir la suivante
-        feat = norm(feat)
-
-    return pred
+def is_valid_sudoku(sudoku):
+    """
+    Vérifie si un Sudoku est valide.
+    """
+    def is_valid_block(block):
+        return sorted(block) == list(range(1, 10))
+    
+    # Vérification des lignes
+    for row in sudoku:
+        if not is_valid_block(list(row)):
+            return False
+    
+    # Vérification des colonnes
+    for col in sudoku.T:
+        if not is_valid_block(list(col)):
+            return False
+    
+    # Vérification des sous-grilles 3x3
+    for i in range(0, 9, 3):
+        for j in range(0, 9, 3):
+            block = sudoku[i:i+3, j:j+3].flatten()
+            if not is_valid_block(list(block)):
+                return False
+    
+    return True
 
 # Définir instance uniquement si non déjà défini par PythonNET
 if 'instance' not in locals():
@@ -71,21 +70,24 @@ if 'instance' not in locals():
     ], dtype=int)
 
 # Charger le modèle CNN pré-entrainé
-model = load_model('C:/Users/etien/Downloads/sudoku_model_09605_10.h5')
+model = load_model('C:/Users/etien/Downloads/sudoku_solver_final.h5')
 
 start = default_timer()
-# Résoudre le Sudoku avec CNN
-# Normaliser la grille avant de la passer au modèle
-grid_preprocessed = norm(instance)
+# Préparer l'entrée pour le modèle
+quiz_array = preprocess_sudoku(instance)
 
-# Résoudre le Sudoku
-resultt = inference_sudoku(grid_preprocessed)
-
-print(resultt)
+# Prédire la solution
+resultt = predict_sudoku(model, quiz_array)
 
 # Convertir en tableau int[,]
 result = np.array(resultt, dtype=np.int32)
 
+
+# Vérification de validité
+if is_valid_sudoku(resultt):
+    print("Le Sudoku prédit est valide.")
+else:
+    print("Le Sudoku prédit n'est pas valide.")
 
 
 if all(all(cell != 0 for cell in row) for row in result):
