@@ -67,7 +67,7 @@ quiz_array = preprocess_sudoku(instance)
 
 resultt = predict_sudoku(model, quiz_array)
 
-result = np.array(resultt, dtype=np.int32)
+result = np.array(resultt, dtype=np.int64)
 
 
 if is_valid_sudoku(resultt):
