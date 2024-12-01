@@ -54,6 +54,7 @@ namespace NeuralNetworkSolverCSharp
 		{
 			//declare your pip packages here
 			InstallPipModule("numpy");
+			InstallPipModule("tensorflow");
 			base.InitializePythonComponents();
 
 			// Load the model
