@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using Python.Runtime;
 using Sudoku.Shared;
 using System.Text;
+using System.IO;
 
 
 namespace Sudoku.simulé
@@ -20,6 +21,9 @@ namespace Sudoku.simulé
 			//using (Py.GIL())
 			//{
 			// create a Python scope
+
+			try{
+		using (Py.GIL()) {
 			using (PyModule scope = Py.CreateScope())
 			{
 
@@ -34,6 +38,9 @@ namespace Sudoku.simulé
 
 				// run the Python script
 				string code = Resources.Simulé_py;
+
+
+				Console.WriteLine($"Script python:{code}");
                
 				scope.Exec(code);
 
@@ -47,6 +54,18 @@ namespace Sudoku.simulé
 			//}
 
 		}
+		
+		}
+catch (PythonException ex)
+{
+    Console.WriteLine($"Erreur Python : {ex.Message}\n{ex.StackTrace}");
+    throw;
+}
+catch (Exception ex)
+{
+    Console.WriteLine($"Erreur générale : {ex.Message}");
+    throw;
+}}
 
 		
 
