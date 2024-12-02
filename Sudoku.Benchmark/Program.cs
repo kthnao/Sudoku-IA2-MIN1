@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Globalization;
 using System.IO;
@@ -7,11 +8,6 @@ using System.Runtime.InteropServices;
 using BenchmarkDotNet.Configs;
 using BenchmarkDotNet.Running;
 using Microsoft.Extensions.Configuration;
-using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Globalization;
-using System.Linq;
 //using Humanizer;
 using Sudoku.Shared;
 
@@ -101,31 +97,32 @@ namespace Sudoku.Benchmark
         }
 
 
-        private static bool RunMenu()
-        {
+		private static bool RunMenu()
+		{
+			Console.WriteLine("Select Mode: \n1-Single Solver Test, \n2-Benchmarks, \n3-Custom Benchmark, \n4-Exit program");
+			var strMode = Console.ReadLine();
+			int.TryParse(strMode, out var intMode);
 
-            Console.WriteLine("Select Mode: \n1-Single Solver Test, \n2-Benchmarks, \n3-Exit program");
-            var strMode = Console.ReadLine();
-            int.TryParse(strMode, out var intMode);
-            //Console.SetBufferSize(130, short.MaxValue - 100);
-            switch (intMode)
-            {
-                case 1:
-                    SingleSolverTest();
-                    break;
-                case 2:
-                    Benchmark();
-                    break;
-                default:
-                    return true;
-            }
+			switch (intMode)
+			{
+				case 1:
+					SingleSolverTest();
+					break;
+				case 2:
+					Benchmark();
+					break;
+				case 3:
+					CustomBenchmark();
+					break;
+				default:
+					return true;
+			}
 
-            return false;
-
-        }
+			return false;
+		}
 
 
-        private static void Benchmark()
+		private static void Benchmark()
         {
             Console.WriteLine("Select Benchmark Type: \n1-Quick Benchmark (Easy, 2 Sudokus, 10s max per sudoku, Single invocation), \n2-Quick Benchmark (Medium, 10 Sudokus, 20s max per sudoku, Single invocation), \n3-Quick Benchmark (Hard, 10 Sudokus, 30s max per sudoku, Single invocation), \n4-Complete Benchmark (All difficulties, 1 mn max per sudoku, several invocations), \n5-Return");
             var strMode = Console.ReadLine();
@@ -169,95 +166,65 @@ namespace Sudoku.Benchmark
 
         }
 
-private static void SingleSolverTest()
-{
-    var solvers = Shared.SudokuGrid.GetSolvers();
-    Console.WriteLine("Select difficulty: 1-Easy, 2-Medium, 3-Hard");
-    var strDiff = Console.ReadLine();
-    int.TryParse(strDiff, out var intDiff);
-    SudokuDifficulty difficulty = SudokuDifficulty.Hard;
-    switch (intDiff)
-    {
-        case 1:
-            difficulty = SudokuDifficulty.Easy;
-            break;
-        case 2:
-            difficulty = SudokuDifficulty.Medium;
-            break;
-        case 3:
-            difficulty = SudokuDifficulty.Hard;
-            break;
-        default:
-            break;
-    }
 
-    var sudokus = SudokuHelper.GetSudokus(difficulty);
 
-    Console.WriteLine($"Choose 10 puzzle indices between 1 and {sudokus.Count}, separated by spaces (e.g., '1 5 10 15 ...')");
-    var strIdx = Console.ReadLine();
-    var indices = strIdx.Split(' ').Select(x => int.Parse(x.Trim()) - 1).Take(10).ToList();
-
-    Console.WriteLine("Choose a solver:");
-    var solverList = solvers.ToList();
-    for (int i = 0; i < solvers.Count(); i++)
-    {
-        Console.WriteLine($"{(i + 1).ToString(CultureInfo.InvariantCulture)} - {solverList[i].Key}");
-    }
-    var strSolver = Console.ReadLine();
-    int.TryParse(strSolver, out var intSolver);
-    var solver = solverList[intSolver - 1].Value.Value;
-
-    // Liste pour stocker les moyennes des temps pour chaque Sudoku
-    List<double> averageTimesList = new List<double>();
-
-    // Liste pour stocker tous les temps d'exécution pour la médiane globale
-    List<double> allExecutionTimes = new List<double>();
-
-    // Liste pour stocker les temps minimum et maximum pour chaque Sudoku
-    List<double> minTimesList = new List<double>();
-    List<double> maxTimesList = new List<double>();
-
-    // Résoudre 5 fois chaque Sudoku sélectionné (ignorer la première exécution)
-    foreach (var idx in indices)
-    {
-        var targetSudoku = sudokus[idx];
-        Console.WriteLine($"\n--- Résolution du Sudoku index {idx + 1} ---");
-        Console.WriteLine("Puzzle original:");
-        Console.WriteLine(targetSudoku.ToString());
-
-        List<double> executionTimes = new List<double>();
-
-        double minTime = double.MaxValue;
-        double maxTime = double.MinValue;
-
-        for (int i = 0; i < 6; i++) // Exécuter 6 fois mais ignorer la première
+        private static void SingleSolverTest()
         {
-            Console.WriteLine($"\n--- Exécution {i + 1}/6 ---");
+            var solvers = Shared.SudokuGrid.GetSolvers();
+            Console.WriteLine("Select difficulty: 1-Easy, 2-Medium, 3-Hard");
+            var strDiff = Console.ReadLine();
+            int.TryParse(strDiff, out var intDiff);
+            SudokuDifficulty difficulty = SudokuDifficulty.Hard;
+            switch (intDiff)
+            {
+                case 1:
+                    difficulty = SudokuDifficulty.Easy;
+                    break;
+                case 2:
+                    difficulty = SudokuDifficulty.Medium;
+                    break;
+                case 3:
+                    difficulty = SudokuDifficulty.Hard;
+                    break;
+                default:
+                    break;
+            }
+            //SudokuDifficulty difficulty = intDiff switch
+            //{
+            //    1 => SudokuDifficulty.Easy,
+            //    2 => SudokuDifficulty.Medium,
+            //    _ => SudokuDifficulty.Hard
+            //};
+
+            var sudokus = SudokuHelper.GetSudokus(difficulty);
+
+            Console.WriteLine($"Choose a puzzle index between 1 and {sudokus.Count}");
+            var strIdx = Console.ReadLine();
+            int.TryParse(strIdx, out var intIdx);
+            var targetSudoku = sudokus[intIdx - 1];
+
+            Console.WriteLine("Chosen Puzzle:");
+            Console.WriteLine(targetSudoku.ToString());
+
+            Console.WriteLine("Choose a solver:");
+            var solverList = solvers.ToList();
+            for (int i = 0; i < solvers.Count(); i++)
+            {
+                Console.WriteLine($"{(i + 1).ToString(CultureInfo.InvariantCulture)} - {solverList[i].Key}");
+            }
+            var strSolver = Console.ReadLine();
+            int.TryParse(strSolver, out var intSolver);
+            var solver = solverList[intSolver - 1].Value.Value;
 
             var cloneSudoku = targetSudoku.CloneSudoku();
             var sw = Stopwatch.StartNew();
 
             cloneSudoku = solver.Solve(cloneSudoku);
 
-            sw.Stop();
-            var elapsedMilliseconds = sw.Elapsed.TotalMilliseconds;
-
-            if (i > 0) // Ignorer la première exécution
-            {
-                executionTimes.Add(elapsedMilliseconds);
-                allExecutionTimes.Add(elapsedMilliseconds);
-
-                // Calculer le temps minimum et maximum
-                if (elapsedMilliseconds < minTime)
-                    minTime = elapsedMilliseconds;
-
-                if (elapsedMilliseconds > maxTime)
-                    maxTime = elapsedMilliseconds;
-            }
-
+            var elapsed = sw.Elapsed;
             if (!cloneSudoku.IsValid(targetSudoku))
             {
-                Console.WriteLine($"Invalid Solution: Solution has {cloneSudoku.NbErrors(targetSudoku)} errors");
+                Console.WriteLine($"Invalid Solution : Solution has {cloneSudoku.NbErrors(targetSudoku)} errors");
                 Console.WriteLine("Invalid solution:");
             }
             else
@@ -266,63 +233,88 @@ private static void SingleSolverTest()
             }
 
             Console.WriteLine(cloneSudoku.ToString());
-            Console.WriteLine($"Time to solution: {elapsedMilliseconds} ms");
+            Console.WriteLine($"Time to solution: {elapsed.TotalMilliseconds} ms");
+
         }
 
-        // Calcul de la moyenne et de la médiane pour ce Sudoku
-        double averageTime = executionTimes.Average();
-        double medianTime = CalculateMedian(executionTimes);
-        averageTimesList.Add(averageTime);
-        minTimesList.Add(minTime);
-        maxTimesList.Add(maxTime);
 
-        Console.WriteLine($"\n--- Statistiques pour le Sudoku index {idx + 1} ---");
-        Console.WriteLine($"Temps moyen (sans la première exécution) : {averageTime:F2} ms");
-        Console.WriteLine($"Temps médian (sans la première exécution) : {medianTime:F2} ms");
-        Console.WriteLine($"Temps minimum : {minTime:F2} ms");
-        Console.WriteLine($"Temps maximum : {maxTime:F2} ms");
-    }
+		private static void CustomBenchmark()
+		{
+			var solvers = Shared.SudokuGrid.GetSolvers();
+			Console.WriteLine("Select difficulty: 1-Easy, 2-Medium, 3-Hard");
+			var strDiff = Console.ReadLine();
+			int.TryParse(strDiff, out var intDiff);
+			SudokuDifficulty difficulty = SudokuDifficulty.Hard;
 
-    // Calcul de la moyenne des moyennes
-    double overallAverageTime = averageTimesList.Average();
+			switch (intDiff)
+			{
+				case 1:
+					difficulty = SudokuDifficulty.Easy;
+					break;
+				case 2:
+					difficulty = SudokuDifficulty.Medium;
+					break;
+				case 3:
+					difficulty = SudokuDifficulty.Hard;
+					break;
+				default:
+					break;
+			}
 
-    // Calcul de la médiane globale
-    double globalMedianTime = CalculateMedian(allExecutionTimes);
+			var sudokus = SudokuHelper.GetSudokus(difficulty);
 
-    // Calcul du temps minimum et maximum global
-    double globalMinTime = minTimesList.Min();
-    double globalMaxTime = maxTimesList.Max();
+			Console.WriteLine($"Choose up to 10 puzzle indices between 1 and {sudokus.Count}, separated by spaces (e.g., '1 5 10')");
+			var strIdx = Console.ReadLine();
+			var indices = strIdx.Split(' ').Select(x => int.Parse(x.Trim()) - 1).Take(10).ToList();
 
-    Console.WriteLine($"\n--- Statistiques Globales ---");
-    Console.WriteLine($"Moyenne des moyennes : {overallAverageTime:F2} ms");
-    Console.WriteLine($"Médiane globale : {globalMedianTime:F2} ms");
-    Console.WriteLine($"Temps minimum global : {globalMinTime:F2} ms");
-    Console.WriteLine($"Temps maximum global : {globalMaxTime:F2} ms");
-}
+			Console.WriteLine("Choose a solver:");
+			var solverList = solvers.ToList();
+			for (int i = 0; i < solvers.Count(); i++)
+			{
+				Console.WriteLine($"{i + 1} - {solverList[i].Key}");
+			}
+			var strSolver = Console.ReadLine();
+			int.TryParse(strSolver, out var intSolver);
+			var solver = solverList[intSolver - 1].Value.Value;
 
-// Méthode pour calculer la médiane
-private static double CalculateMedian(List<double> values)
-{
-    values.Sort();
-    int count = values.Count;
-    if (count % 2 == 0)
-    {
-        // Si le nombre d'éléments est pair, prendre la moyenne des deux éléments centraux
-        return (values[count / 2 - 1] + values[count / 2]) / 2.0;
-    }
-    else
-    {
-        // Si le nombre d'éléments est impair, prendre l'élément central
-        return values[count / 2];
-    }
-}
+			List<double> executionTimes = new List<double>();
+
+			foreach (var idx in indices)
+			{
+				var targetSudoku = sudokus[idx];
+				Console.WriteLine($"\n--- Resolving Sudoku index {idx + 1} ---");
+
+				for (int i = 0; i < 6; i++)
+				{
+					if (i == 0) continue; // Ignore the first run
+					var cloneSudoku = targetSudoku.CloneSudoku();
+					var sw = Stopwatch.StartNew();
+
+					cloneSudoku = solver.Solve(cloneSudoku);
+
+					sw.Stop();
+					executionTimes.Add(sw.Elapsed.TotalMilliseconds);
+				}
+			}
+
+			Console.WriteLine($"\n--- Global Statistics ---");
+			Console.WriteLine($"Average Time: {executionTimes.Average():F2} ms");
+			Console.WriteLine($"Median Time: {CalculateMedian(executionTimes):F2} ms");
+		}
+
+		private static double CalculateMedian(List<double> values)
+		{
+			values.Sort();
+			if (values.Count % 2 == 0)
+			{
+				return (values[values.Count / 2 - 1] + values[values.Count / 2]) / 2.0;
+			}
+			else
+			{
+				return values[values.Count / 2];
+			}
+		}
 
 
-
-
-
-
-
-
-    }
+	}
 }
