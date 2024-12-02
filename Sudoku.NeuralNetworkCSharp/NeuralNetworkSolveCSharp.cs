@@ -9,4 +9,3 @@ public class NeuralNetworkSolverCSharp : ISudokuSolver
         throw new NotImplementedException();
     }
 }
-
