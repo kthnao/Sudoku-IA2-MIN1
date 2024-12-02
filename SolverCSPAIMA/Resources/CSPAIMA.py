@@ -1,6 +1,6 @@
 import numpy as np
 from aima3.logic import *
-from aima3.csp import backtracking_search, AC3, mrv, lcv, mac, CSP
+from aima3.csp import *
 import random
 import threading
 
@@ -27,24 +27,7 @@ def sudoku_constraint(A, a, B, b):
     
     return True
 
-def degree(assignment, csp):
-    unassigned_vars = [var for var in csp.variables if var not in assignment]
-    if not unassigned_vars:
-        return None  # Toutes les variables sont assignées
-    return max(unassigned_vars, key=lambda var: sum(1 for n in csp.neighbors[var] if n not in assignment))
-
-def mrv_degree(assignment, csp):
-    unassigned_vars = [var for var in csp.variables if var not in assignment]
-    if not unassigned_vars:
-        return None  # Toutes les variables sont assignées
-    
-    # Trouver la valeur minimale du domaine sans recalculer à chaque itération
-    min_domain_size = min(len(csp.domains[var]) for var in unassigned_vars)
-    mrv_vars = [var for var in unassigned_vars if len(csp.domains[var]) == min_domain_size]
-    
-    # Appliquer l'heuristique du degré pour départager les variables MRV
-    return max(mrv_vars, key=lambda var: sum(1 for n in csp.neighbors[var] if n not in assignment))
-
+# Fonction pour générer les voisins d'une grille de Sudoku (lignes, colonnes, sous-grilles)
 def create_neighbors():
     """Optimisation de la création des voisins dans une grille de Sudoku."""
     neighbors = { (i, j): set() for i in range(9) for j in range(9) }
@@ -71,21 +54,48 @@ def create_neighbors():
     return neighbors
 
 
+def degree(assignment, csp):
+    unassigned_vars = [var for var in csp.variables if var not in assignment]
+    if not unassigned_vars:
+        return None  # Toutes les variables sont assignées
+    return max(unassigned_vars, key=lambda var: sum(1 for n in csp.neighbors[var] if n not in assignment))
+
+def mrv_degree(assignment, csp):
+    unassigned_vars = [var for var in csp.variables if var not in assignment]
+    if not unassigned_vars:
+        return None  # Toutes les variables sont assignées
+    
+    # Trouver la valeur minimale du domaine sans recalculer à chaque itération
+    min_domain_size = min(len(csp.domains[var]) for var in unassigned_vars)
+    mrv_vars = [var for var in unassigned_vars if len(csp.domains[var]) == min_domain_size]
+    
+    # Appliquer l'heuristique du degré pour départager les variables MRV
+    return max(mrv_vars, key=lambda var: sum(1 for n in csp.neighbors[var] if n not in assignment))
+    
+def default_order(var, assignment, csp):
+    return csp.choices(var)
+
 # Dictionnaire pour maper les stratégies en fonctions
 heuristics_dict = {
     "mrv": mrv,  # Minimum Remaining Values
     "degree": degree,  # Degree heuristic
-    "mrv_degree": mrv_degree  # Minimum Remaining Values + Degree heuristic
+    "mrv_degree": mrv_degree,  # Minimum Remaining Values + Degree heuristic
+    "fuv": first_unassigned_variable  # First Unassigned Variable
+  
 }
 
 value_orders_dict = {
     "lcv": lcv,  # Least Constraining Value
-    "random": lambda var, assignment, csp: sorted(csp.choices(var), key=lambda _: random.random())
+    "random": lambda var, assignment, csp: sorted(csp.choices(var), key=lambda _: random.random()), # Ordre aléatoire
+    "default": lambda var, assignment, csp: sorted(csp.choices(var)), # Ordre croissant par défaut
+    "udv": unordered_domain_values  # Unassigned Degree Value
 }
 
 inference_methods_dict = {
     "ac3": lambda csp, var, value, assignment, removals: AC3(csp),  # Corrigé pour que AC3 soit utilisé correctement dans le contexte
-    "mac": mac  # Maintain Arc-Consistency
+    "mac": mac,  # Maintain Arc-Consistency
+    "ni": no_inference,  # Pas d'inférence
+    "fc": forward_checking  # Forward Checking
 }
 
 def solve_sudoku_csp_with_timeout(grid, variable_heuristic, value_order, inference_method, timeout=60):
@@ -119,7 +129,7 @@ def solve_sudoku_csp_with_timeout(grid, variable_heuristic, value_order, inferen
             order_domain_values=value_orders_dict[value_order],
             inference=inference_methods_dict[inference_method]
         )
-        
+
         if solution:
             # Convertir la solution en grille NumPy
             for (i, j), value in solution.items():

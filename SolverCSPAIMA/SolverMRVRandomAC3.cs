@@ -4,7 +4,7 @@ namespace Sudoku.SolverCSPAIMA
     {
         protected override (string heuristic, string valueOrder, string inferenceMethod) GetStrategies()
         {
-            return ("mrv", "random", "ac3");  // Combinaison MRV + random + AC3
+            return ("mrv", "random", "ac3");  // Combinaison MRV + Random + AC3
         }
     }
 }
