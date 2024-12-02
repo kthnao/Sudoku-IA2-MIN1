@@ -282,27 +282,38 @@ namespace Sudoku.Shared
             PyObject asNetArray = scope.Get("asNetArray");
             PyObject netResult = asNetArray.Invoke(pyCells);
 
-            // Convertissez le PyObject résultant en tableau .NET
-            var longArray = netResult.AsManagedObject(typeof(long[,])) as long[,];
-            if (longArray == null)
+            int[,] intArray;
+
+			try
             {
-                throw new InvalidCastException("Cannot convert the result to long[,].");
+				intArray = netResult.AsManagedObject(typeof(int[,])) as int[,];
             }
-
-            int rows = longArray.GetLength(0);
-            int cols = longArray.GetLength(1);
-            int[,] managedResult = new int[rows, cols];
-
-            for (int i = 0; i < rows; i++)
+            catch
             {
-                for (int j = 0; j < cols; j++)
-                {
-                    managedResult[i, j] = (int)longArray[i, j];
-                }
-            }
+				// Convertissez le PyObject résultant en tableau .NET
+				var longArray = netResult.AsManagedObject(typeof(long[,])) as long[,];
+				if (longArray == null)
+				{
+					throw new InvalidCastException("Cannot convert the result to long[,].");
+				}
 
-            return managedResult;
-        }
+				int rows = longArray.GetLength(0);
+				int cols = longArray.GetLength(1);
+				intArray = new int[rows, cols];
+
+				for (int i = 0; i < rows; i++)
+				{
+					for (int j = 0; j < cols; j++)
+					{
+						intArray[i, j] = (int)longArray[i, j];
+					}
+				}
+
+				
+			}
+            return intArray;
+
+		}
 
 
 	}
