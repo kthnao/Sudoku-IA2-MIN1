@@ -43,8 +43,6 @@ public class TestPythonSolver : PythonSolverBase
 
 				var Result = result.As<int[][]>();
 				
-				//Console.WriteLine($"Type of result from Python: {Result.GetType()}");
-				
 				// Print the contents of the 2D array
 				// foreach (var row in Result)
 				// {

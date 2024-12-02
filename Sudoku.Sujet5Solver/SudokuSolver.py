@@ -180,6 +180,4 @@ def solveSudoku (sudoku):
     return(tmpSudoku)
 
 solution = solveSudoku(sudoku)
-# print(CalculateNumberOfErrors(solution))
-# PrintSudoku(solution)
 result= solution.tolist()
