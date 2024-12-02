@@ -1,10 +1,10 @@
 namespace Sudoku.SolverCSPAIMA
 {
-    public class SolverMRVDegreeLAC3 : SolverCSPAIMA
+    public class SolverDegreeDefaultMAC : SolverCSPAIMA
     {
         protected override (string heuristic, string valueOrder, string inferenceMethod) GetStrategies()
         {
-            return ("mrv_degree", "lcv", "ac3");  // Combinaison MRV + Degree + LCV + AC3
+            return ("degree", "default", "mac");  // Combinaison Degree + Default + MAC
         }
     }
 }
