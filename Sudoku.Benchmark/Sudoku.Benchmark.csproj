@@ -20,11 +20,14 @@
     <ProjectReference Include="..\Sudoku.Shared\Sudoku.Shared.csproj" />
     <ProjectReference Include="..\Sudoku.Backtracking\Sudoku.Backtracking.csproj" />
     <ProjectReference Include="..\Sudoku.Shared\Sudoku.Shared.csproj" />
+
+    <ProjectReference Include="..\Sudoku.Sujet5Solver\Sudoku.Sujet5Solver.csproj" />
     <ProjectReference Include="..\Sudoku.ResolutionNeuronne\Sudoku.ResolutionNeuronne.csproj" />
     <ProjectReference Include="..\Sudoku.NeuralNetworkCSharp\Sudoku.NeuralNetworkCSharp.csproj" />
     <ProjectReference Include="..\SolverCSPAIMA\Sudoku.SolverCSPAIMA.csproj" />
     <ProjectReference Include="..\ProjectTestSolver\ProjectTestSolver.csproj" />
     <ProjectReference Include="..\Sudoku.simulé\Sudoku.simulé.csproj" />
+
   </ItemGroup>
   <ItemGroup>
     <None Update="appsettings.json">

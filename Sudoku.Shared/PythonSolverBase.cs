@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 using System.IO;
 using System.Runtime.InteropServices;
 using System.Threading.Tasks;
@@ -135,11 +136,11 @@ namespace Sudoku.Shared
             //    DownloadUrl = @"https://www.python.org/ftp/python/3.7.3/python-3.7.3-embed-amd64.zip",
             //};
 
-            //Runtime.PythonDLL = "python38.dll";
-            //Python.Deployment.Installer.Source = new Installer.DownloadInstallationSource()
-            //{
-            //    DownloadUrl = @"https://www.python.org/ftp/python/3.8.9/python-3.8.9-embed-amd64.zip",
-            //};
+            Runtime.PythonDLL = "python38.dll";
+            Python.Deployment.Installer.Source = new Installer.DownloadInstallationSource()
+            {
+                DownloadUrl = @"https://www.python.org/ftp/python/3.8.9/python-3.8.9-embed-amd64.zip",
+            };
 
             //Runtime.PythonDLL = "python39.dll";
             //Python.Deployment.Installer.Source = new Installer.DownloadInstallationSource()
@@ -147,12 +148,13 @@ namespace Sudoku.Shared
             //    DownloadUrl = @"https://www.python.org/ftp/python/3.9.9/python-3.9.9-embed-amd64.zip",
             //};
 
-            // Runtime.PythonDLL = "python37.dll";
-            // // set the download source
-            // Python.Deployment.Installer.Source = new Installer.DownloadInstallationSource()
-            // {
-            //     DownloadUrl = @"https://www.python.org/ftp/python/3.7.3/python-3.7.3-embed-amd64.zip",
-            // };
+            //Runtime.PythonDLL = "python37.dll";
+            // set the download source
+            //Python.Deployment.Installer.Source = new Installer.DownloadInstallationSource()
+            //{
+            //    DownloadUrl = @"https://www.python.org/ftp/python/3.7.3/python-3.7.3-embed-amd64.zip",
+            //};
+
 
 
             // // install in local directory. if you don't set it will install in local app data of your user account
@@ -182,10 +184,60 @@ namespace Sudoku.Shared
 
 			await Installer.TryInstallPip();
 
+            //await InstallNumpy();
 			//Python.Deployment.Installer.SetupPython().Wait();
 			//Installer.TryInstallPip();
 
         }
+
+        // Méthode pour exécuter une commande Python
+        // private static void RunPythonCommand(string pythonExecutable, string arguments)
+        // {
+        //     var processStartInfo = new ProcessStartInfo
+        //     {
+        //         FileName = pythonExecutable,
+        //         Arguments = arguments,
+        //         RedirectStandardOutput = true,
+        //         RedirectStandardError = true,
+        //         UseShellExecute = false,
+        //         CreateNoWindow = true
+        //     };
+
+        //     using (var process = new Process { StartInfo = processStartInfo })
+        //     {
+        //         process.Start();
+
+        //         // Capture et affiche la sortie
+        //         string output = process.StandardOutput.ReadToEnd();
+        //         string error = process.StandardError.ReadToEnd();
+
+        //         process.WaitForExit();
+
+        //         if (!string.IsNullOrEmpty(output))
+        //         {
+        //             Console.WriteLine($"Output: {output}");
+        //         }
+
+        //         if (!string.IsNullOrEmpty(error))
+        //         {
+        //             Console.WriteLine($"Error: {error}");
+        //         }
+        //     }
+        // }
+
+        // public static async Task InstallNumpy()
+        // {
+        //     string pythonExecutable = Path.Combine(
+        //         Python.Deployment.Installer.InstallPath,
+        //         "python.exe"
+        //     );
+
+        //     // Assurez-vous que `pip` est installé
+        //     RunPythonCommand(pythonExecutable, "-m pip install numpy");
+
+        //     // Vérifiez si numpy est installé
+        //     RunPythonCommand(pythonExecutable, "-c \"import numpy; print(numpy.__version__)\"");
+        // }
 
 
         protected virtual void InitializePythonComponents()
