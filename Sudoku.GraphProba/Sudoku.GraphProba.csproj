@@ -1,0 +1,24 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <TargetFramework>net8.0</TargetFramework>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <Nullable>enable</Nullable>
+    </PropertyGroup>
+
+    <ItemGroup>
+      <ProjectReference Include="..\Sudoku.Shared\Sudoku.Shared.csproj" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <PackageReference Include="Microsoft.ML.Probabilistic" Version="0.4.2403.801" />
+      <PackageReference Include="Microsoft.ML.Probabilistic.Compiler" Version="0.4.2403.801" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <None Update="compiledModel\Model_EP.dll">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </None>
+    </ItemGroup>
+
+</Project>
