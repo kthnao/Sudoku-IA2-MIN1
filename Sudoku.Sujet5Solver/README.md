@@ -1,7 +1,7 @@
-Solveur de Sudoku : Recuit Simulé
+# Solveur de Sudoku : Recuit Simulé
 Ce projet propose un solveur probabiliste de Sudoku basé sur un algorithme Recuit Simulé. L'objectif est de trouver une solution valide à un puzzle Sudoku tout en minimisant les erreurs à chaque étape. Cet algorithme utilise une approche stochastique et exploite un mécanisme de refroidissement simulé pour converger vers une solution optimale.
 
-1. Vue d'ensemble
+## 1. Vue d'ensemble
 Objectif
 Le solveur implémente un algorithme probabiliste pour résoudre des puzzles Sudoku. Il respecte l'ensemble des règles classiques du Sudoku :
 
@@ -15,8 +15,8 @@ Caractéristiques
 Optimisation par annealing simulé pour explorer l'espace des solutions.
 Réduction progressive du facteur de température pour affiner la solution.
 Capacité à gérer des puzzles de complexité variable, en adaptant la fréquence des itérations en fonction des contraintes du puzzle.
-2. Structure du code
-2.1 Classes et fonctions principales
+## 2. Structure du code
+### 2.1 Classes et fonctions principales
 PrintSudoku(sudoku)
 Affiche une représentation lisible de la grille Sudoku actuelle.
 
@@ -46,22 +46,22 @@ Résout un puzzle Sudoku en appliquant l'algorithme d'annealing simulé :
 Initialisation de la grille avec des valeurs aléatoires.
 Optimisation itérative pour réduire les erreurs.
 Raffinement progressif via une diminution de la température.
-3. Utilisation
+## 3. Utilisation
 Fonctionnement général
 Définir une grille Sudoku de départ sous forme d'une chaîne de caractères, où 0 représente les cases vides.
 Convertir cette grille en un tableau NumPy grâce à la fonction de parsing.
 Exécuter la fonction solveSudoku(sudoku) pour obtenir la solution.
 
-4. Limitations
+## 4. Limitations
 Complexité des puzzles : L'algorithme peut être inefficace pour des puzzles extrêmement difficiles avec peu de valeurs initiales.
 Temps d'exécution : La méthode probabiliste peut nécessiter un grand nombre d'itérations pour converger, notamment en cas de "blocage".
 Validité non garantie : Le résultat final peut nécessiter une validation externe si des erreurs subsistent après optimisation.
-5. Améliorations futures
+## 5. Améliorations futures
 Implémenter une meilleure stratégie pour la sélection des cases à modifier (priorité aux cases les plus problématiques).
 Ajouter un mécanisme de réinitialisation si l'algorithme reste bloqué trop longtemps dans un état sous-optimal.
 Intégrer une méthode de validation automatique pour confirmer l'absence d'erreurs dans la solution finale.
 Ce solveur offre une approche robuste et adaptable, bien qu'il repose sur des heuristiques probabilistes, pour résoudre efficacement des puzzles Sudoku de difficulté variable.
-6. Resultats
+## 6. Resultats
 Easy : 2s
 Medium : 42s
 Hard : ~4h20
