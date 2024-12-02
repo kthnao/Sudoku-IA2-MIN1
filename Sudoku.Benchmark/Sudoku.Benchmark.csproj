@@ -27,6 +27,7 @@
     <ProjectReference Include="..\SolverCSPAIMA\Sudoku.SolverCSPAIMA.csproj" />
     <ProjectReference Include="..\ProjectTestSolver\ProjectTestSolver.csproj" />
     <ProjectReference Include="..\Sudoku.simulé\Sudoku.simulé.csproj" />
+    <ProjectReference Include="..\Sudoku.Z3Solvers\Sudoku.Z3Solvers.csproj" />
 
   </ItemGroup>
   <ItemGroup>
