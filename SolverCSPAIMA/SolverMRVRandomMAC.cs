@@ -1,6 +1,6 @@
 namespace Sudoku.SolverCSPAIMA
 {
-    public class SolverMRVRandomAC3 : SolverCSPAIMA
+    public class SolverMRVRandomMAC : SolverCSPAIMA
     {
         protected override (string heuristic, string valueOrder, string inferenceMethod) GetStrategies()
         {
