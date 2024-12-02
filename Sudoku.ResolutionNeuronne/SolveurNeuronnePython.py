@@ -59,8 +59,12 @@ if 'instance' not in locals():
         [0, 0, 0, 0, 0, 0, 0, 0, 0],
         [0, 4, 1, 8, 0, 0, 0, 0, 0],
         [0, 0, 0, 0, 3, 0, 0, 2, 0],
+<<<<<<< Updated upstream
         [0, 0, 8, 7, 0, 0, 0, 0, 0]], dtype=int)
     
+=======
+        [0, 0, 8, 7, 0, 0, 0, 0, 0]],  dtype=int)
+>>>>>>> Stashed changes
 
 # Obtenir le chemin absolu du répertoire actuel
 #current_dir = os.path.dirname(os.path.realpath('SolveurNeuronnePython.py'))
