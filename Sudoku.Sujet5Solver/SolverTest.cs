@@ -80,8 +80,9 @@ public class RecuitSimpleSolver : PythonSolverBase
 		protected override void InitializePythonComponents()
 		{
 			//declare your pip packages here
-			// InstallPipModule("numpy");
-			base.InitializePythonComponents();
+			InstallPipModule("numpy");
+			InstallPipModule("simanneal");
+		base.InitializePythonComponents();
 		}
 
 	}
