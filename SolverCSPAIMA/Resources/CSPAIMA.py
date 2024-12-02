@@ -5,36 +5,26 @@ import random
 
 # Fonction de validation des contraintes (les cases adjacentes doivent avoir des valeurs différentes)
 def sudoku_constraint(A, a, B, b):
-    """Les cases adjacentes (A, B) doivent avoir des valeurs différentes"""
-    return a != b
-
-def degree(assignment, csp):
-    """Retourne la variable avec le plus grand nombre de voisins non assignés."""
-    unassigned_vars = [var for var in csp.variables if var not in assignment]
-    return max(unassigned_vars, key=lambda var: len([n for n in csp.neighbors[var] if n not in assignment]))
-
-def mrv_degree(assignment, csp):
-    """Retourne la variable avec le moins de valeurs restantes, puis le plus grand nombre de voisins non assignés"""
-    unassigned_vars = [var for var in csp.variables if var not in assignment]
-    mrv_vars = [var for var in unassigned_vars if len(csp.domains[var]) == min(len(csp.domains[v]) for v in unassigned_vars)]
-    return max(mrv_vars, key=lambda var: len([n for n in csp.neighbors[var] if n not in assignment]))
-
-# Dictionnaire pour maper les stratégies en fonctions
-heuristics_dict = {
-    "mrv": mrv,  # Minimum Remaining Values
-    "degree": degree,  # Degree heuristic
-    "mrv_degree": mrv_degree  # Minimum Remaining Values + Degree heuristic
-}
-
-value_orders_dict = {
-    "lcv": lcv,  # Least Constraining Value
-    "random": lambda var, assignment, csp: sorted(csp.choices(var), key=lambda _: random.random())
-}
-
-inference_methods_dict = {
-    "ac3": lambda csp, var, value, assignment, removals: AC3(csp),  # Corrigé pour que AC3 soit utilisé correctement dans le contexte
-    "mac": mac  # Maintain Arc-Consistency
-}
+    """Les cases adjacentes (A, B) doivent respecter les règles du Sudoku :
+       1. Pas de doublon dans une ligne.
+       2. Pas de doublon dans une colonne.
+       3. Pas de doublon dans un carré 3x3."""
+    
+    # Extraire les coordonnées des variables
+    i, j = A
+    k, l = B
+    
+    # 1. Pas de doublon dans la ligne
+    if i == k and a == b:
+        return False
+    # 2. Pas de doublon dans la colonne
+    if j == l and a == b:
+        return False
+    # 3. Pas de doublon dans la sous-grille 3x3
+    if (i // 3 == k // 3) and (j // 3 == l // 3) and a == b:
+        return False
+    
+    return True
 
 def solve_sudoku_csp(grid, variable_heuristic, value_order, inference_method):
     """Résoudre le Sudoku avec les heuristiques et stratégies passées"""
