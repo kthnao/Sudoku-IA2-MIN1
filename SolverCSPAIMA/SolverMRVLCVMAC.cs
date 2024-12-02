@@ -2,9 +2,9 @@ namespace Sudoku.SolverCSPAIMA
 {
     public class SolverMRVLCVMAC : SolverCSPAIMA
     {
-        protected override (string heuristic, string valueOrder, string inferenceMethod) GetStrategies()
+        protected override (string heuristic, string valueOrder, string inferenceMethod, bool useMinConflicts) GetStrategies()
         {
-            return ("mrv", "lcv", "mac");  // Combinaison MRV + LCV + MAC
+            return ("mrv", "lcv", "mac",false);  // Combinaison MRV + LCV + MAC
         }
     }
 }

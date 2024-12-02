@@ -9,7 +9,7 @@ namespace Sudoku.SolverCSPAIMA{
 public abstract class SolverCSPAIMA : PythonSolverBase
     {
         // Méthode abstraite pour obtenir les stratégies spécifiées
-        protected abstract (string heuristic, string valueOrder, string inferenceMethod) GetStrategies();
+        protected abstract (string heuristic, string valueOrder, string inferenceMethod,  bool useMinConflicts) GetStrategies();
 
         public override SudokuGrid Solve(SudokuGrid s)
         {
@@ -25,12 +25,13 @@ public abstract class SolverCSPAIMA : PythonSolverBase
                     scope.Set("instance", pyCells);
 
                     // Récupérer les stratégies spécifiées
-                    var (selectedHeuristic, selectedValueOrder, selectedInferenceMethod) = GetStrategies();
+                    var (selectedHeuristic, selectedValueOrder, selectedInferenceMethod, useMinConflicts) = GetStrategies();
 
                     // Passer les stratégies sélectionnées au script Python
                     scope.Set("variable_heuristic", selectedHeuristic);
                     scope.Set("value_order", selectedValueOrder);
                     scope.Set("inference_method", selectedInferenceMethod);
+                    scope.Set("use_min_conflict", useMinConflicts);
 
                     // Charger et exécuter le script Python
                     string code = Resources.CSPAIMA_py;  // Le contenu du script Python

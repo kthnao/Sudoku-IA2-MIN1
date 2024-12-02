@@ -62,6 +62,25 @@ def create_neighbors():
 
     return neighbors
 
+def min_conflicts_sudoku(board, max_steps=10000):
+    # Algorithme Min Conflicts pour résoudre le Sudoku
+    for _ in range(max_steps):
+        var = select_variable_with_max_conflict(board)  # Choisir la variable avec le plus de conflits
+        if var is None:  # Si aucune variable n'a de conflits (grille complète)
+            return board
+        row, col = var
+        
+        # Choisir une valeur qui minimise les conflits pour cette cellule
+        new_value = choose_value_with_min_conflict(board, row, col)
+        board[row][col] = new_value
+    
+    return None  # Retourne None si la solution n'est pas trouvée après max_steps
+
+def solve_min_conflicts_csp(grid):
+    """Résoudre le Sudoku avec l'algorithme Min Conflicts"""
+    solved_grid = min_conflicts_sudoku(grid, max_steps=10000)
+    return solved_grid
+
 
 # Dictionnaire pour maper les stratégies en fonctions
 heuristics_dict = {
@@ -75,12 +94,15 @@ value_orders_dict = {
     "random": lambda var, assignment, csp: sorted(csp.choices(var), key=lambda _: random.random())
 }
 
+
 inference_methods_dict = {
     "ac3": lambda csp, var, value, assignment, removals: AC3(csp),  # Corrigé pour que AC3 soit utilisé correctement dans le contexte
-    "mac": mac  # Maintain Arc-Consistency
+    "mac": mac,  # Maintain Arc-Consistency
+    "min_conflicts": min_conflicts_sudoku  # Ajoute Min Conflicts ici
 }
 
-def solve_sudoku_csp(grid, variable_heuristic, value_order, inference_method):
+
+def solve_sudoku_csp(grid, variable_heuristic, value_order, inference_method, use_min_conflict):
     """Résoudre le Sudoku avec les heuristiques et stratégies passées"""
     
     # Afficher la grille d'entrée pour vérifier qu'elle est bien reçue
@@ -98,28 +120,36 @@ def solve_sudoku_csp(grid, variable_heuristic, value_order, inference_method):
     csp = CSP(variables, domains, neighbors, sudoku_constraint)
 
     # Appliquer les heuristiques et stratégies passées
-    solution = backtracking_search(
-        csp,
-        select_unassigned_variable=heuristics_dict[variable_heuristic],  # Mapper à la fonction
-        order_domain_values=value_orders_dict[value_order],  # Mapper à la fonction
-        inference=inference_methods_dict[inference_method]  # Mapper à la fonction
-    )
+    if use_min_conflict:
+        # Si Min Conflicts est activé, on l'utilise pour résoudre
+        solved_grid = min_conflicts_sudoku(grid)
+    else:
+        # Sinon, on applique les heuristiques et stratégies habituelles
+        solved_grid = backtracking_search(
+            csp,
+            select_unassigned_variable=heuristics_dict[variable_heuristic],  # Mapper à la fonction
+            order_domain_values=value_orders_dict[value_order],  # Mapper à la fonction
+            inference=inference_methods_dict[inference_method]  # Mapper à la fonction
+        )
+
 
     solved_grid = np.zeros((9, 9), dtype=int)
 
-    if solution is None:
+    if solved_grid is None:
         print("Failed to solve the Sudoku puzzle")
     
     else:
         # Créer la grille résolue        
-        for (i, j), value in solution.items():
-            solved_grid[i, j] = value
+        for i in range(solved_grid.shape[0]):  # Parcours des lignes
+            for j in range(solved_grid.shape[1]):  # Parcours des colonnes
+                solved_grid[i, j] = solved_grid[i, j]
+
 
     return solved_grid
 
 
 # Appel de la fonction avec les arguments passés depuis C#
-solved_grid = solve_sudoku_csp(instance, variable_heuristic, value_order, inference_method)
+solved_grid = solve_sudoku_csp(instance, variable_heuristic, value_order, inference_method, use_min_conflict)
 
 # Afficher la grille résolue
 print("\nGrille résolue:")
