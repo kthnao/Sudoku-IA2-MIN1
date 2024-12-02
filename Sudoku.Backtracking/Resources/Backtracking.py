@@ -51,7 +51,6 @@ start = default_timer()
 if solve_sudoku(instance):
     # print("Sudoku résolu par backtracking avec succès.")
     result = instance  # `result` sera utilisé pour récupérer la grille résolue depuis C#
-    print(result)
 else:
     print("Aucune solution trouvée.")
 execution = default_timer() - start

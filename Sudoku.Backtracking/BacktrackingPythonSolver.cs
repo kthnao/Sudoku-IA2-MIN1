@@ -36,8 +36,6 @@ namespace Sudoku.Backtracking
 				scope.Exec(code);
 
 				PyObject result = scope.Get("result");
-				
-				Console.WriteLine(result);
 
 				// Convertissez le résultat NumPy en tableau .NET
 				var managedResult = AsManagedArray(scope, result);

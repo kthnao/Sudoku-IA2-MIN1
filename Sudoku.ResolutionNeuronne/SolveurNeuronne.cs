@@ -51,5 +51,14 @@ namespace Sudoku.ResolutionNeuronne
                 }
             }
         }
-    }
+
+        protected override void InitializePythonComponents()
+        {
+	        //declare your pip packages here
+	        InstallPipModule("numpy");
+	        InstallPipModule("tensorflow");
+			base.InitializePythonComponents();
+        }
+
+	}
 }
