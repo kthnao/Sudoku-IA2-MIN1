@@ -1,3 +1,4 @@
+import os
 import numpy as np
 import tensorflow as tf
 from tensorflow.keras.models import load_model
@@ -60,7 +61,14 @@ if 'instance' not in locals():
         [0, 0, 0, 0, 3, 0, 0, 2, 0],
         [0, 0, 8, 7, 0, 0, 0, 0, 0]], dtype=int)
 
-model = load_model('C:/Users/etien/Downloads/sudoku_solver_final.h5')
+# Obtenir le chemin absolu du répertoire actuel
+#current_dir = os.path.dirname(os.path.realpath('SolveurNeuronnePython.py'))
+#print("Path: ", current_dir)
+
+# Construire le chemin absolu du fichier de modèle
+#model_path = os.path.join(current_dir, 'sudoku_solver_final.h5')
+
+model = load_model('./sudoku_solver_final.h5')
 
 start = default_timer()
 quiz_array = preprocess_sudoku(instance)

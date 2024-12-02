@@ -6,6 +6,12 @@
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
   </ItemGroup>
+  <ItemGroup>
+      <ProjectReference Include="..\Sudoku.Shared\Sudoku.Shared.csproj" />
+      <None Update="sudoku_solver_final.h5">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </None>
+  </ItemGroup>
 
   <PropertyGroup>
     <TargetFramework>net8.0</TargetFramework>
