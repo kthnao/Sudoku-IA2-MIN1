@@ -40,7 +40,7 @@ namespace Sudoku.simulé
 				string code = Resources.Simulé_py;
 
 
-				Console.WriteLine($"Script python:{code}");
+				// Console.WriteLine($"Script python:{code}");
                
 				scope.Exec(code);
 
