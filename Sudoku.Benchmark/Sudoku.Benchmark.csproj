@@ -9,18 +9,26 @@
     <None Remove="Sudoku.Solver\**" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="BenchmarkDotNet" Version="0.13.12" />
+    <PackageReference Include="BenchmarkDotNet" Version="0.14.0" />
     <PackageReference Include="Microsoft.Extensions.Configuration" Version="8.0.0" />
     <PackageReference Include="Microsoft.Extensions.Configuration.Binder" Version="8.0.1" />
     <PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="8.0.0" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\Sudoku.HumanSolvers\Sudoku.HumanSolvers.csproj" />
     <ProjectReference Include="..\Sudoku.GraphProba\Sudoku.GraphProba.csproj" />
     <ProjectReference Include="..\Sudoku.Shared\Sudoku.Shared.csproj" />
     <ProjectReference Include="..\Sudoku.Backtracking\Sudoku.Backtracking.csproj" />
     <ProjectReference Include="..\Sudoku.Shared\Sudoku.Shared.csproj" />
+
+    <ProjectReference Include="..\Sudoku.Sujet5Solver\Sudoku.Sujet5Solver.csproj" />
+    <ProjectReference Include="..\Sudoku.ResolutionNeuronne\Sudoku.ResolutionNeuronne.csproj" />
     <ProjectReference Include="..\Sudoku.NeuralNetworkCSharp\Sudoku.NeuralNetworkCSharp.csproj" />
     <ProjectReference Include="..\SolverCSPAIMA\Sudoku.SolverCSPAIMA.csproj" />
+    <ProjectReference Include="..\ProjectTestSolver\ProjectTestSolver.csproj" />
+    <ProjectReference Include="..\Sudoku.simulé\Sudoku.simulé.csproj" />
+    <ProjectReference Include="..\Sudoku.Z3Solvers\Sudoku.Z3Solvers.csproj" />
+
   </ItemGroup>
   <ItemGroup>
     <None Update="appsettings.json">

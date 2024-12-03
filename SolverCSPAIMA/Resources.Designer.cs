@@ -62,28 +62,24 @@ namespace Sudoku.SolverCSPAIMA {
         
         /// <summary>
         ///   Recherche une chaîne localisée semblable à import numpy as np
-        ///from timeit import default_timer
+        ///from aima3.logic import *
+        ///from aima3.csp import *
         ///
-        ///def is_valid(grid, row, col, num):
-        ///    # VÃ©rifier si num est prÃ©sent dans la ligne spÃ©cifiÃ©e
-        ///    if num in grid[row]:
-        ///        return False
-        ///    
-        ///    # VÃ©rifier si num est prÃ©sent dans la colonne spÃ©cifiÃ©e
-        ///    if num in grid[:, col]:
-        ///        return False
-        ///    
-        ///    # VÃ©rifier si num est prÃ©sent dans le bloc 3x3
-        ///    start_row, start_col = 3 * (row // 3), 3 * (col // 3)
-        ///    for r in range(start_row, start_row + 3):
-        ///        for c in rang [le reste de la chaîne a été tronqué]&quot;;.
+        ///solved_grid = np.empty((9, 9), dtype=int)
+        ///# Fonction de validation des contraintes
+        ///def sudoku_constraint(A, a, B, b):
+        ///    return a != b  # Les valeurs des voisins doivent Ãªtre diffÃ©rentes
+        ///
+        ///# RÃ©solution du Sudoku en utilisant CSP
+        ///def solve_sudoku_csp(grid):    
+        ///    # Afficher la grille d&apos;entrÃ©e pour vÃ©rifier qu&apos;elle est bien reÃ§ue
+        ///    print(&quot;Grille initiale:&quot;)
+        ///    print(np.array(grid))  # Afficher la grille sous forme de [le reste de la chaîne a été tronqué]&quot;;.
         /// </summary>
         internal static string CSPAIMA_py {
             get {
                 return ResourceManager.GetString("CSPAIMA.py", resourceCulture);
             }
         }
-        
-
     }
 }

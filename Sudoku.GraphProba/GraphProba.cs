@@ -1,11 +1,458 @@
-﻿using Sudoku.Shared;
+﻿using System.Reflection;
+using Sudoku.Shared;
+using Microsoft.ML.Probabilistic.Algorithms;
+using Microsoft.ML.Probabilistic.Distributions;
+using Microsoft.ML.Probabilistic.Math;
+using Microsoft.ML.Probabilistic.Models;
+using Microsoft.ML.Probabilistic.Models.Attributes;
+using Range = Microsoft.ML.Probabilistic.Models.Range;
+using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.CSharp;
+using Microsoft.ML.Probabilistic;
+
 
 namespace Sudoku.GraphProba;
 
 public class GraphProba : ISudokuSolver
 {
-    public SudokuGrid Solve(SudokuGrid s)
-    {
-        return s;
-    }
+	private static RobustSudokuModel robustModel = new RobustSudokuModel();
+	
+	public SudokuGrid Solve(SudokuGrid s)
+	{
+		//var model = new NaiveSudokuModel();
+		IGeneratedAlgorithm? compiledModel = null;
+		try
+		{
+			Assembly assembly = Assembly.LoadFrom(@".\compiledModel\Model_EP.dll");
+			Type modelType = assembly.GetTypes().FirstOrDefault(t => typeof(IGeneratedAlgorithm).IsAssignableFrom(t));
+			compiledModel = (IGeneratedAlgorithm)Activator.CreateInstance(modelType);
+		}
+		catch (IOException e)
+		{
+			return robustModel.SolveSudoku(s, compiledModel);
+		}
+		
+		Console.WriteLine(@"Using Precompiled Model...");
+		return robustModel.SolveSudoku(s, compiledModel);
+	}
+}
+
+public class GraphNaiveProba : ISudokuSolver
+{
+	private static NaiveSudokuModel naiveModel = new NaiveSudokuModel();
+	public SudokuGrid Solve(SudokuGrid s)
+	{
+		//var model = new NaiveSudokuModel();
+		naiveModel.SolveSudoku(s);
+		return s;
+	}
+}
+
+/// <summary>
+/// Ce deuxième modèle n'apporte pas encore tout à fait satisfaction mais apporte un réel progrès vis à vis du modèle naïf. J'ai rajouté des commentaires là où de nouveaux tests peuvent être entrepris.
+/// le moteur d'inférence n'a plus qu'à compiler le modèle une seule fois, et il résout d'autres Sudokus faciles.
+/// Il manque cependant de résoudre les Sudokus plus difficiles. Ceci dit, il trouve la bonne valeur pour une majorité de cellules,
+/// et du coup on peut envisager de l'utiliser de façon itérative en ne conservant que les valeurs pour lesquelles les probabilités sont les meilleures et en réinjectant dans CellsPrior.ObservedValue comme dans l'exemple Cyclist d'Infer.Net,
+/// plutôt que d'utiliser cellsPosterior.Point ou cellsProbsPosterior[cellIndex].GetMode() comme c'est le cas actuellement ce qui revient à ignorant les probabilités réelles et conserver toutes les valeurs du premier coup)
+/// </summary>
+public class RobustSudokuModel
+{
+
+
+	public InferenceEngine InferenceEngine;
+
+
+	private static List<int> CellDomain = Enumerable.Range(1, 9).ToList();
+	private static List<int> CellIndices = Enumerable.Range(0, 81).ToList();
+
+
+
+
+	// Cf https://en.wikipedia.org/wiki/Categorical_distribution et https://en.wikipedia.org/wiki/Categorical_distribution#Bayesian_inference_using_conjugate_prior pour le choix des distributions
+	// et le chapitre 6 de https://dotnet.github.io/infer/InferNet101.pdf pour l'implémentation dans Infer.Net
+
+
+	public VariableArray<Dirichlet> CellsPrior;
+	public VariableArray<Vector> ProbCells;
+	public VariableArray<int> Cells;
+	public int nbrOfIterations = 50;
+	public int NbIterationCells { get; set; } = 2;
+
+
+	private const double EpsilonProba = 0.00000001;
+	private static double FixedValueProba = 1.0 - ((CellDomain.Count - 1) * EpsilonProba);
+
+
+	public RobustSudokuModel()
+	{
+
+
+
+
+		Range valuesRange = new Range(CellDomain.Count).Named("valuesRange");
+		Range cellsRange = new Range(CellIndices.Count).Named("cellsRange");
+
+
+
+
+		CellsPrior = Variable.Array<Dirichlet>(cellsRange).Named("CellsPrior");
+		ProbCells = Variable.Array<Vector>(cellsRange).Named("ProbCells");
+		ProbCells[cellsRange] = Variable<Vector>.Random(CellsPrior[cellsRange]);
+		ProbCells.SetValueRange(valuesRange);
+
+
+
+
+		// Initialisation des distribution a priori de façon uniforme (les valeurs sont équiprobables pour chaque cellule)
+
+
+		Dirichlet[] dirUnifArray =
+			Enumerable.Repeat(Dirichlet.Uniform(CellDomain.Count), CellIndices.Count).ToArray();
+		CellsPrior.ObservedValue = dirUnifArray;
+
+
+		Cells = Variable.Array<int>(cellsRange);
+		Cells[cellsRange] = Variable.Discrete(ProbCells[cellsRange]);
+
+
+
+
+
+
+		//Ajout des contraintes de Sudoku (all diff pour tous les voisinages)
+		//Loic: cette boucle applique une contrainte de non égalité pour les cellules voisines de ligne, colonne et groupe
+		foreach (var cellIndex in CellIndices)
+		{
+			int row = cellIndex / 9;
+			int col = cellIndex % 9;
+			foreach (var neighbourCellIndex in SudokuGrid.CellNeighbours[row][col])
+			{
+				int neighbourIndex = neighbourCellIndex.row * 9 + neighbourCellIndex.column;
+				if (neighbourIndex > cellIndex)
+				{
+					Variable.ConstrainFalse(Cells[cellIndex] == Cells[neighbourIndex]);
+				}
+			}
+		}
+
+
+
+
+
+		//Todo: tester d'autres algo et paramétrages associés
+
+
+		IAlgorithm algo = new ExpectationPropagation();
+		//IAlgorithm algo = new GibbsSampling();
+		//IAlgorithm algo = new VariationalMessagePassing();
+		//IAlgorithm algo = new MaxProductBeliefPropagation();
+		//les algos ont ete teste cependant la difference lors du lancement du projet n'est pas facilement visible
+		algo.DefaultNumberOfIterations = nbrOfIterations;
+		//algo.DefaultNumberOfIterations = 200;
+
+
+
+
+		InferenceEngine = new InferenceEngine(algo);
+		InferenceEngine.Compiler.WriteSourceFiles = true;
+		InferenceEngine.Compiler.GeneratedSourceFolder = @"..\..\..\..\Sudoku.GraphProba\compiledModel";
+		InferenceEngine.Compiler.GenerateInMemory = false; // Forces saving to disk
+
+
+		//InferenceEngine.OptimiseForVariables = new IVariable[] { Cells };
+
+
+	}
+
+
+
+
+	public virtual SudokuGrid SolveSudoku(SudokuGrid s, IGeneratedAlgorithm? compiledMod)
+	{
+		Dirichlet[] dirArray = Enumerable.Repeat(Dirichlet.Uniform(CellDomain.Count), CellIndices.Count).ToArray();
+
+
+		//On affecte les valeurs fournies par le masque à résoudre en affectant les distributions de probabilités initiales
+		foreach (var cellIndex in CellIndices)
+		{
+			int row = cellIndex / 9;
+			int col = cellIndex % 9;
+			if (s.Cells[row, col] > 0)
+			{
+
+
+				//Vector v = Vector.Zero(CellDomain.Count);
+				//v[s.Cellules[cellIndex] - 1] = 1.0;
+
+
+
+
+				//Todo: Alternative: le fait de mettre une proba non nulle permet d'éviter l'erreur "zero probability" du Sudoku Easy-n°2, mais le Easy#3 n'est plus résolu
+				//tentative de changer la probabilite pour solver le sudoku 3 infructueuse
+				Vector v = Vector.Constant(CellDomain.Count, EpsilonProba);
+				v[s.Cells[row, col] - 1] = FixedValueProba;
+
+
+				dirArray[cellIndex] = Dirichlet.PointMass(v);
+			}
+		}
+
+		if (compiledMod != null)
+		{
+			compiledMod.SetObservedValue("CellsPrior", dirArray);
+			// compiledMod.Execute(nbrOfIterations);
+			// Dirichlet[] cellsProbsPosterior = compiledMod.Marginal<Dirichlet[]>("ProbCells");
+			//
+			//
+			// foreach (var cellIndex in CellIndices)
+			// {
+			// 	var row = cellIndex / 9;
+			// 	int col = cellIndex % 9;
+			// 	if (s.Cells[row, col] == 0)
+			// 	{
+			// 		//s.Cellules[cellIndex] = cellValues[cellIndex];
+			//
+			// 		var mode = cellsProbsPosterior[cellIndex].GetMode();
+			// 		var value = mode.IndexOf(mode.Max()) + 1;
+			// 		s.Cells[row, col] = value;
+			// 	}
+			// }
+			
+			int cellDiscovered = CountNonZeroElements(s.Cells);
+
+			// Iteration tant que l'on a pas découvert toutes les cases
+			while (cellDiscovered < CellIndices.Count)
+			{
+				Console.WriteLine("itération");
+				compiledMod.Execute(nbrOfIterations);
+				Dirichlet[] cellsProbsPosterior = compiledMod.Marginal<Dirichlet[]>("ProbCells");
+
+				int[] bestCellsProbsPosteriorIndex = GetBestDirichletSubArrayIndex(cellsProbsPosterior, NbIterationCells, s.Cells);
+
+				foreach (var index in bestCellsProbsPosteriorIndex)
+				{
+					var mode = cellsProbsPosterior[index].GetMode();
+					var value = mode.IndexOf(mode.Max()) + 1;
+
+					Vector v = Vector.Constant(CellDomain.Count, EpsilonProba);
+					v[value - 1] = FixedValueProba;
+
+					dirArray[index] = Dirichlet.PointMass(v);
+
+					if (s.Cells[index / 9, index % 9] == 0)
+						cellDiscovered++;
+					s.Cells[index / 9, index % 9] = value;
+				}
+
+				CellsPrior.ObservedValue = dirArray;
+			}
+		}
+		else
+		{
+			CellsPrior.ObservedValue = dirArray;
+
+			DoInference(dirArray, s);
+		}
+		return s;
+	}
+
+	protected virtual void DoInference(Dirichlet[] dirArray, SudokuGrid s)
+	{
+
+
+
+		// Todo: tester en inférant sur d'autres variables aléatoire,
+		// et/ou en ayant une approche itérative: On conserve uniquement les cellules dont les valeurs ont les meilleures probabilités 
+		//et on réinjecte ces valeurs dans CellsPrior comme c'est également fait dans le projet neural nets. 
+		int cellDiscovered = CountNonZeroElements(s.Cells);
+
+		// Iteration tant que l'on a pas découvert toutes les cases
+		while (cellDiscovered < CellIndices.Count)
+		{
+			Dirichlet[] cellsProbsPosterior = InferenceEngine.Infer<Dirichlet[]>(ProbCells);
+
+			int[] bestCellsProbsPosteriorIndex = GetBestDirichletSubArrayIndex(cellsProbsPosterior, NbIterationCells, s.Cells);
+
+			foreach (var index in bestCellsProbsPosteriorIndex)
+			{
+				var mode = cellsProbsPosterior[index].GetMode();
+				var value = mode.IndexOf(mode.Max()) + 1;
+
+				Vector v = Vector.Constant(CellDomain.Count, EpsilonProba);
+				v[value - 1] = FixedValueProba;
+
+				dirArray[index] = Dirichlet.PointMass(v);
+
+				if (s.Cells[index / 9, index % 9] == 0)
+					cellDiscovered++;
+				s.Cells[index / 9, index % 9] = value;
+			}
+
+			CellsPrior.ObservedValue = dirArray;
+		}
+
+		//Autre possibilité de variable d'inférence (bis)
+		// Dirichlet[] cellsProbsPosterior = InferenceEngine.Infer<Dirichlet[]>(ProbCells);
+
+
+		// foreach (var cellIndex in CellIndices)
+		// {
+		// 	var row = cellIndex / 9;
+		// 	int col = cellIndex % 9;
+		// 	if (s.Cells[row, col] == 0)
+		// 	{
+		// 		//s.Cellules[cellIndex] = cellValues[cellIndex];
+		//
+		// 		var mode = cellsProbsPosterior[cellIndex].GetMode();
+		// 		var value = mode.IndexOf(mode.Max()) + 1;
+		// 		s.Cells[row, col] = value;
+		// 	}
+		// }
+
+	}
+	
+	private int[] GetBestDirichletSubArrayIndex(Dirichlet[] dirichletArray, int N, int[,] sudokuCells)
+	{
+		// Initialise la liste des N meilleurs index avec les N premiers index de dirichletArray pour les cellules vides
+		var emptyCells = sudokuCells
+			.Cast<int>()
+			.Select((cell, index) => new { cell, index })
+			.Where(x => x.cell == 0)
+			.Select(x => x.index)
+			.Take(N)
+			.ToArray();
+
+		// Pour chaque cellule == 0 du sudoku
+		foreach (var cellIndex in CellIndices)
+		{
+			if (sudokuCells[cellIndex / 9, cellIndex % 9] == 0)
+			{
+				var currentMode = dirichletArray[cellIndex].GetMode();
+
+				int minDirIndex = emptyCells[0];
+
+				// Récupère l'index du Dirichlet le plus petit de la liste d'index des meilleurs Dirichlet
+				foreach (var index in emptyCells)
+				{
+					var currentDirMode = dirichletArray[index].GetMode();
+					var minDirMode = dirichletArray[minDirIndex].GetMode();
+
+					if (currentDirMode.Max() < minDirMode.Max())
+					{
+						minDirIndex = index;
+					}
+				}
+				// Remplace ce Dirichlet si la valeur max du Dirichlet de la cellule actuelle est supérieure
+				if (dirichletArray[minDirIndex].GetMode().Max() < currentMode.Max())
+				{
+					emptyCells[Array.IndexOf(emptyCells, minDirIndex)] = cellIndex;
+				}
+			}
+		}
+		return emptyCells;
+	}
+	
+	private int CountNonZeroElements(int[,] array)
+	{
+		int count = 0;
+		foreach (var element in array)
+		{
+			if (element > 0)
+			{
+				count++;
+			}
+		}
+		return count;
+	}
+
+
+}
+
+
+
+
+
+
+/// <summary>
+/// Ce premier modèle est très faible: d'une part, il ne résout que quelques Sudokus faciles, d'autre part, le modèle est recompilé à chaque fois, ce qui prend beaucoup de temps
+/// </summary>
+public class NaiveSudokuModel
+{
+
+
+	private static List<int> CellDomain = Enumerable.Range(1, 9).ToList();
+	private static List<int> CellIndices = Enumerable.Range(0, 81).ToList();
+
+
+
+
+	public virtual void SolveSudoku(SudokuGrid s)
+	{
+
+
+		var algo = new ExpectationPropagation();
+		var engine = new InferenceEngine(algo);
+
+
+		//Implémentation naïve: une variable aléatoire entière par cellule
+		var cells = new List<Variable<int>>(CellIndices.Count);
+
+
+		foreach (var cellIndex in CellIndices)
+		{
+			//On initialise le vecteur de probabilités de façon uniforme pour les chiffres de 1 à 9
+			var baseProbas = Enumerable.Repeat(1.0, CellDomain.Count).ToList();
+			//Création et ajout de la variable aléatoire
+			var cell = Variable.Discrete(baseProbas.ToArray());
+			cells.Add(cell);
+
+
+		}
+
+
+		//Ajout des contraintes de Sudoku (all diff pour tous les voisinages)
+		foreach (var cellIndex in CellIndices)
+		{
+			foreach (var neighbourCellIndex in SudokuGrid.CellNeighbours[cellIndex / 9][cellIndex % 9])
+			{
+				if ((neighbourCellIndex.row * 9 + neighbourCellIndex.column) > cellIndex)
+				{
+					Variable.ConstrainFalse(cells[cellIndex] == cells[(neighbourCellIndex.row * 9 + neighbourCellIndex.column)]);
+				}
+			}
+		}
+
+
+
+		//On affecte les valeurs fournies par le masque à résoudre comme variables observées
+		foreach (var cellIndex in CellIndices)
+		{
+			int row = cellIndex / 9;
+			int col = cellIndex % 9;
+			if (s.Cells[row, col] > 0)
+			{
+				cells[cellIndex].ObservedValue = s.Cells[Math.DivRem(cellIndex, 9, out int columnv), columnv] - 1;
+			}
+		}
+
+
+		foreach (var cellIndex in CellIndices)
+		{
+			int row = cellIndex / 9;
+			int col = cellIndex % 9;
+			if (s.Cells[row, col] == 0)
+			{
+				var result = (Discrete)engine.Infer(cells[cellIndex]);
+				s.Cells[row, col] = result.Point + 1;
+			}
+		}
+
+
+	}
+
+
+
+
+
+
 }
